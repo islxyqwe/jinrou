@@ -92,7 +92,6 @@ exports.showUrl=showUrl=(url,nohistory=false)->
             url=result[2]
         else
             location.href=url
-    
     switch url
         when "/my"
             # 配置とか
@@ -143,6 +142,7 @@ exports.showUrl=showUrl=(url,nohistory=false)->
             if result=url.match /^\/room\/-?(\d+)$/
                 # 房间
                 page "game-game",null,Index.game.game,parseInt result[1]
+                $("#content").css "max-width","95%"
             else if result=url.match /^\/user\/(\w+)$/
                 # ユーザー
                 page "user-view",null,Index.user.view,result[1]
@@ -167,6 +167,8 @@ exports.showUrl=showUrl=(url,nohistory=false)->
                         location.replace url
             else
                 page "top",null,Index.top,null
+    unless $("div#content div.game").length
+        $("#content").removeAttr "style"
     unless nohistory
         history.pushState null,null,url
                     

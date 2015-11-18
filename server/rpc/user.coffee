@@ -145,7 +145,7 @@ exports.actions =(req,res,ss)->
                 record.name=query.name
 
             #max bytes of nick name
-            maxLength=30
+            maxLength=20
             record.name = record.name.trim()
             if record.name == ''
                 res {error:"昵称不能仅为空格"}

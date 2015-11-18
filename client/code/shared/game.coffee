@@ -237,7 +237,7 @@ exports.jobrules=[
     ]
   }
   {
-    name:"桃栗配役"
+    name:"桃栗配置"
     rule:[
       {
         name:"蝙蝠"
@@ -617,7 +617,7 @@ exports.getruleobj=(name)->
     obj=Shared.game.jobrules
     for branch in names #.区切りでオブジェクト名
         ruleobj=obj.filter((x)->x.name==branch)[0]
-        unless ruleobj  # そんな配役は見つからない
+        unless ruleobj  # そんな配置は見つからない
             return
         if "function"==typeof ruleobj.rule
             # 目当てのものを見つけた

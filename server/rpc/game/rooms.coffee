@@ -14,7 +14,7 @@ room: {
   number: Number(プレイヤー数)
   players:[PlayerObject,PlayerObject,...]
   gm: Booelan(trueならオーナーGM)
-  jobrule: String   //开始後はなんの配役か（Endless黑暗火锅用）
+  jobrule: String   //开始後はなんの配置か（Endless黑暗火锅用）
 }
 PlayerObject.start=Boolean
 PlayerObject.mode="player" / "gm" / "helper"
@@ -553,16 +553,18 @@ module.exports.actions=(req,res,ss)->
                 unless banTarget in (room.players.map (x)->x.realid)
                     res error:"对象非法"
                     return
-                console.log "目标"+banTarget
-                banTargetName = ((room.players.filter((pl)->pl.realid==banTarget)).map (x)->x.name).toString()
+                console.log "目标  id："+banTarget
+                banpl=room.players.filter((pl)->pl.realid==banTarget)
+                banTargetName = banpl.name
                 banMinutes = parseInt(60/room.players.length)
-                console.log "name"+banTargetName
+                console.log "目标name："+banTargetName
                 M.users.findOne {userid:banTarget},(err,doc)->
                     unless doc?
                         res error:"此用户不存在"
                         return
                     addquery=
                         userid:doc.userid
+                        ip:doc.ip #卿本佳人奈何做贼？非逼我banIP
                         timestamp:Date.now()
                     M.blacklist.findOne {userid:banTarget},(err,doc)->
                         unless doc?

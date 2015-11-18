@@ -1,5 +1,5 @@
 exports.start=->
-	# 配役種類一览
+	# 配置種類一览
 	console.log "hi"
 	dl=$("#castings")
 	jobrules=Shared.game.jobrules

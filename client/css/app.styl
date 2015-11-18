@@ -222,10 +222,24 @@ body.heaven
   border-left 2px dashed #ffffff
   padding-left 0.4em
 
+//sticky_form
+.sticky
+  margin-right 15px
+  margin-left -3px
+  position fixed
+  top 0px
+  z-index 10
+  border ridge
+  border-width 3px
+  border-top-width 0
+
 //logs
+#logs > div div.comment div{
+	    word-break: break-all;
+		}
 #logs
   //display table
-  width 100%
+  max-width 100%
   > div
     margin 0
     padding 1px
@@ -250,7 +264,7 @@ body.heaven
     div.comment
       display table-cell
       width 100%
-      /*div
+	  /*div
         //white-space pre-wrap
         white-space -moz-pre-wrap
         white-space -webkit-pre-wrap
