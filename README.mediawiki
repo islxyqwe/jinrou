@@ -1,9 +1,9 @@
-== 汝は人狼なりや? ==
+== 吾之所问，汝为狼否? ==
 Are you a werewolf?
 
-[http://jinrou.uhyohyo.net/ 月下人狼サーバー]稼働中!
+[http://jinrou.sunevsvc.com:/ 月下人狼服务器]运行中!
 == version ==
-1.10.5
+1.10.6
 
 == requirements ==
 * SocketStream

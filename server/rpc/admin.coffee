@@ -195,7 +195,9 @@ exports.actions =(req,res,ss)->
         addquery=
             time:new Date()
             message:query.message
-        M.news.insert addquery,{safe:true},(err,doc)->
-            res null
+        M.news.findOne {message:addquery.message},(err,doc)->
+            unless doc?
+                M.news.insert addquery,{safe:true},(err,doc)->
+                    res null
 
 pro=null    # 现在のプロセス

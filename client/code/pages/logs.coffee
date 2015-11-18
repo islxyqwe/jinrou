@@ -25,7 +25,7 @@ exports.start=->
         name:"特殊规则"
         rule:[
             {
-                name:"自由配役"
+                name:"自由配置"
                 title:"可以自由设定角色。"
                 rule:null
             }

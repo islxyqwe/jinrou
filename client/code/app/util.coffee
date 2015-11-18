@@ -231,7 +231,7 @@ exports.blindName=(opt={},cb)->
     $("#nameform").submit (je)->
         je.preventDefault()
         #max bytes of blind name
-        maxLength=30
+        maxLength=20
 
         je.target.elements["name"].value = je.target.elements["name"].value.trim()
         if je.target.elements["name"].value.trim() == ''

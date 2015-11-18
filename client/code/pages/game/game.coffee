@@ -142,6 +142,10 @@ exports.start=(roomid)->
                     # 终了
                     document.body.classList.add "finished"
                     document.body.classList.remove x for x in ["day","night"]
+                    if $(".sticky").length
+                        $(".sticky").removeAttr "style"
+                        $(".sticky").removeAttr "class"
+                        $("#logs").removeAttr "style"
                     $("#jobform").attr "hidden","hidden"
                     if timerid
                         clearInterval timerid
@@ -150,6 +154,10 @@ exports.start=(roomid)->
                     # 昼と夜の色
                     document.body.classList.add (if game.night then "night" else "day")
                     document.body.classList.remove (if game.night then "day" else "night")
+
+                    if $("#sticky").hasClass("sticky")
+                      $("#sticky").css
+                        "background-color": $("body").css("background-color")
 
                 unless $("#jobform").get(0).hidden= game.finished ||  obj.sleeping || !obj.type
                     # 代入しつつの　投票表单必要な場合
@@ -360,7 +368,7 @@ exports.start=(roomid)->
                             e.checked = e.value==rule[key]
                         else
                             e.value=rule[key]
-                # 配役も再現
+                # 配置も再現
                 for job in Shared.game.jobs
                     e=form.elements[job]    # 职业
                     if e?
@@ -454,7 +462,7 @@ exports.start=(roomid)->
                 $("#playersinfo").append b
                 $(b).click (je)->
                     Index.util.selectprompt "踢出","请选择要被踢出的人",room.players.map((x)->{name:x.name,value:x.userid}),(id)->
-#                   Index.util.prompt "踢出","踢出人のidを入力して下さい:",null,(id)->
+                    # Index.util.prompt "踢出","踢出人のidを入力して下さい:",null,(id)->
                         ss.rpc "game.rooms.kick", roomid,id,(result)->
                             if result?
                                 Index.util.message "错误",result
@@ -846,7 +854,7 @@ exports.start=(roomid)->
         input.dataset.categoryName=name
         dd.appendChild input
         $("#catesfield").append(dt).append dd
-    # 配役タイプ
+    # 配置タイプ
     setjobrule=(rulearr,names,parent)->
         for obj in rulearr
             # name,title, ruleをもつ
@@ -868,7 +876,7 @@ exports.start=(roomid)->
         name:"特殊规则"
         rule:[
             {
-                name:"自由角色"
+                name:"自由配置"
                 title:"可以自由的选择角色。"
                 rule:null
             }
@@ -908,12 +916,12 @@ exports.start=(roomid)->
         form.elements["number"].value=number
         setplayersbyjobrule room,form,number
         jobsformvalidate room,form
-    # 配役一览をアレする
+    # 配置一览をアレする
     setplayersbyjobrule=(room,form,number)->
         jobrulename=form.elements["jobrule"].value
         if form.elements["scapegoat"].value=="on"
             number++    # 替身君
-        if jobrulename in ["特殊规则.自由配役","特殊规则.半份黑暗火锅"]
+        if jobrulename in ["特殊规则.自由配置","特殊规则.半份黑暗火锅"]
             $("#jobsfield").get(0).hidden=false
             $("#catesfield").get(0).hidden= jobrulename!="特殊规则.半份黑暗火锅"
             #$("#yaminabe_opt_nums").get(0).hidden=true
@@ -966,7 +974,7 @@ exports.start=(roomid)->
             checkrule form,ruleobj,obj.rules,fsetname2
             
             
-    # 配役をテキストで書いてあげる
+    # 配置をテキストで書いてあげる
     setjobsmonitor=(form,number)->
         text=""
         rule=Index.util.formQuery form
@@ -1406,3 +1414,50 @@ speakValueToStr=(game,value)->
                 "→#{pl.name}"
             else if result=value.match /^helperwhisper_(.+)$/
                 "建议"
+
+$ ->
+    $(window).resize ->
+        unless $(".sticky").length > 0
+            return
+        $("#sticky").css "width",$("#logs").css "width"
+        unless $("div#content div.game").length
+            $("#content").removeAttr "style"
+    $("#widescreen").live "click",->
+        if $("#widescreen").is(':checked')
+            $("#content").css "max-width","95%"
+        else
+            $("#content").removeAttr "style"
+        $(".sticky").css
+            "width": $("#logs").css "width"
+    sticky_top = undefined
+    $(window).scroll ->
+        sticky()
+    $("#isfloat").live "click",->
+        sticky()
+    sticky = ->
+        unless $("#sticky").length > 0
+            return
+        unless $("#isfloat").is(':checked')
+            $(".sticky").removeAttr "style"
+            $(".sticky").removeAttr "class"
+            $("#logs").removeAttr "style"
+            return
+        if $("body").hasClass("finished")
+            return
+        winTop = $(window).scrollTop()
+        if winTop >= $("#sticky").offset().top and not $("#sticky").hasClass("sticky")
+            sticky_top = $("#sticky").offset().top
+            $("#logs").css
+                "position": "relative"
+                "top": $("#sticky").height() + "px"
+                "padding-top": "5px"
+
+            $("#sticky").addClass "sticky"
+            $("#sticky").css
+                "background-color": $("body").css("background-color")
+                "width": $("#logs").css "width"
+        if winTop < sticky_top and $("#sticky").hasClass("sticky")
+            $(".sticky").removeAttr "style"
+            $(".sticky").removeAttr "class"
+            $("#logs").removeAttr "style"
+        

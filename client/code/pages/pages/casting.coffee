@@ -1,5 +1,5 @@
 exports.start=(rolename)->
-    # 配役表 例)普通配役-普通1
+    # 配置表 例)普通配置-普通1
     try
         rolename=decodeURIComponent rolename
     ruleobj=Shared.game.getruleobj rolename.replace "-","."

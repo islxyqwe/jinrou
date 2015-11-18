@@ -226,7 +226,7 @@ class Game
 
         @gamelogs=[]
         @iconcollection={}  #(id):(url)
-        # 决定配役（DBに入らないかも・・・）
+        # 决定配置（DBに入らないかも・・・）
         @joblist=null
         # 游戏スタートに必要な情報
         @startoptions=null
@@ -1097,7 +1097,7 @@ class Game
                         break
         @werewolf_flag=@werewolf_flag.filter (fl)->
             # こいつらは1夜限り
-            return !(/^(?:GreedyWolf_|ToughWolf)_/.test fl)
+            return !(/^(?:GreedyWolf|ToughWolf)_/.test fl)
 
     # 死んだ人を処理する type: タイミング
     # type: "day": 夜が明けたタイミング "night": 处刑後 "other":其他(ターン変わり時の能力で死んだやつなど）
@@ -2011,6 +2011,8 @@ class Player
     isWerewolf:->false
     # 洋子かどうか
     isFox:->false
+    # 妖狐の仲間としてみえるか
+    isFoxVisible:->false
     # 恋人かどうか
     isFriend:->false
     # Complexかどうか
@@ -2564,10 +2566,11 @@ class Fox extends Player
     willDieWerewolf:false
     isHuman:->false
     isFox:->true
+    isFoxVisible:->true
     makejobinfo:(game,result)->
         super
         # 妖狐は仲間が分かる
-        result.foxes=game.players.filter((x)->x.type=="Fox").map (x)->
+        result.foxes=game.players.filter((x)->x.isFoxVisible()).map (x)->
             x.publicinfo()
     divined:(game,player)->
         super
@@ -2615,8 +2618,8 @@ class TinyFox extends Diviner
     isFox:->true
     makejobinfo:(game,result)->
         super
-        # 小狐は妖狐が分かる
-        result.foxes=game.players.filter((x)->x.type=="Fox").map (x)->
+        # 子狐は妖狐が分かる
+        result.foxes=game.players.filter((x)->x.isFoxVisible()).map (x)->
             x.publicinfo()
 
     job:(game,playerid)->
@@ -2858,7 +2861,16 @@ class WolfDiviner extends Werewolf
             if p.team=="Werewolf" && p.isHuman()
                 # 狂人変化
                 jobnames=Object.keys jobs
-                newjob=jobnames[Math.floor Math.random()*jobnames.length]
+                loop #避免狂人成为exceptions的职业，"GameMaster"保留
+                    newjob = jobnames[Math.floor(Math.random() * jobnames.length)]
+                    if ((nj) ->
+                        exceptions=["MinionSelector","Thief","Helper","QuantumPlayer","Waiting","Watching"]
+                        for job_denied in exceptions
+                            return false  if nj is job_denied
+                        true
+                    )(newjob)
+                        break
+
                 plobj=p.serialize()
                 plobj.type=newjob
                 newpl=Player.unserialize plobj  # 新生狂人
@@ -2887,7 +2899,7 @@ class Fugitive extends Player
     jobname:"逃亡者"
     sunset:(game)->
         @setTarget null
-        if game.day<=1 && game.rule.scapegoat!="off"    # 一日目は逃げない
+        if game.day<=1 #&& game.rule.scapegoat!="off"    # 一日目は逃げない
             @setTarget ""
         else if @scapegoat
             # 身代わり君の自動占い
@@ -3173,13 +3185,13 @@ class Immoral extends Player
     jobname:"背德者"
     team:"Fox"
     beforebury:(game,type)->
-        # 狐が全员死んでいたら自殺
-        unless game.players.some((x)->!x.dead && x.type=="Fox")
+        # 狐が全員死んでいたら自殺
+        unless game.players.some((x)->!x.dead && x.isFox())
             @die game,"foxsuicide"
     makejobinfo:(game,result)->
         super
         # 妖狐が分かる
-        result.foxes=game.players.filter((x)->x.isFox()).map (x)->
+        result.foxes=game.players.filter((x)->x.isFoxVisible()).map (x)->
             x.publicinfo()
 class Devil extends Player
     type:"Devil"
@@ -6509,6 +6521,7 @@ class FoxMinion extends Complex
     willDieWerewolf:false
     isHuman:->false
     isFox:->true
+    isFoxVisible:->true
     getJobname:->"狐凭（#{@main.getJobname()}）"
     # 占われたら死ぬ
     divined:(game,player)->
@@ -6843,7 +6856,7 @@ module.exports.actions=(req,res,ss)->
                 
             ruleinfo_str="" # 开始告知
 
-            if query.jobrule in ["特殊规则.自由配役","特殊规则.半份黑暗火锅"]   # 自由のときはクエリを参考にする
+            if query.jobrule in ["特殊规则.自由配置","特殊规则.半份黑暗火锅"]   # 自由のときはクエリを参考にする
                 for job in Shared.game.jobs
                     joblist[job]=parseInt(query[job]) || 0    # 仕事の数
                 # カテゴリも
@@ -7340,8 +7353,8 @@ module.exports.actions=(req,res,ss)->
                 ruleinfo_str=Shared.game.getrulestr query.jobrule,list_for_rule
                 
 
-            else if query.jobrule!="特殊规则.自由配役"
-                # 配役に従ってアレする
+            else if query.jobrule!="特殊规则.自由配置"
+                # 配置に従ってアレする
                 func=Shared.game.getrulefunc query.jobrule
                 unless func
                     res "不明的配置"
@@ -7362,7 +7375,7 @@ module.exports.actions=(req,res,ss)->
                 
             log=
                 mode:"system"
-                comment:"配役: #{ruleinfo_str}"
+                comment:"配置: #{ruleinfo_str}"
             splashlog game.id,game,log
             
             if query.jobrule in ["特殊规则.黑暗火锅","特殊规则.半份黑暗火锅","特殊规则.Endless黑暗火锅"]
@@ -7408,7 +7421,7 @@ module.exports.actions=(req,res,ss)->
                 ruleobj[x]=query[x] ? null
 
             game.setrule ruleobj
-            # 配役リストをセット
+            # 配置リストをセット
             game.joblist=joblist
             game.startoptions=options
             game.startplayers=players
