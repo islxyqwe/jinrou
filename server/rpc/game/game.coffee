@@ -1209,14 +1209,28 @@ class Game
         else if mode=="revote"
             # 重新投票になった
             @dorevote "revote"
-            return false
+            if @rule.jobrule!="主题配置.果壳魅影"
+                return false
+            else
+                log=
+                    mode:"system"
+                    comment:"发生平票，今天不进行烧烤。"
+                splashlog @id,this,log
+                @nextturn()
         else if mode=="punish"
             # 投票
             # 结果が出た 死んだ!
             # だれが投票したか調べる
             follower=table.filter((obj)-> obj.voteto==player.id).map (obj)->obj.id
-            player.die this,"punish",follower
-            
+            alives=@players.filter (x)->!x.dead
+            voted=@players.filter (x)->x.reallyvoted
+            if @rule.jobrule!="主题配置.果壳魅影" || voted.length*2>=ailves.length
+                player.die this,"punish",follower
+            else
+                log=
+                    mode:"system"
+                    comment:"投票人数不足，今天不进行烧烤。"
+                splashlog @id,this,log
             if player.dead && @rule.GMpsychic=="on"
                 # GM灵能
                 log=
@@ -5975,7 +5989,199 @@ class Watching extends Player
     getSpeakChoiceDay:(game)->
         return ["audience"]
 
-            
+class GuokrPlayer extends Player
+    type:"GuokrPlayer"
+    jobname:"玩家（魅影）"
+    sleeping:->true
+    jobdone:->@flag?
+    indoor:->!@goneout
+    voted:(game,votingbox)->true
+    reallyvoted:(game,votingbox)->game.votingbox.isVoteFinished this
+    getSpeakChoice:(game)->
+        alive=game.players.filter (x)->!x.dead
+        pls=for pl in alive
+            "guokr_#{pl.id}"
+        super.concat pls
+    constructor:->
+        super
+        @goneout=false
+        @action=null
+    gooutdoor:->
+        @goneout=true
+    sunset:(game)->
+        super
+        @setTarget null
+        @action=null
+        @goneout=false
+    job:(game,playerid)->
+        if @flag?
+            return "已经不能发动能力了"
+        pl=game.getPlayer playerid
+        unless pl?
+            return "这个玩家不存在。"
+        pl.touched game,@id
+        @gooutdoor
+        @action="visit"
+        log=
+            mode:"skill"
+            to:@id
+            comment:"#{@name} 准备去拜访 #{pl.name} 的家。"
+        splashlog game.id,game,log
+        @setflag "done"
+    sunrise:(game)->
+        super
+        @dovisit game
+    dovisit:(game)->
+        pl=game.getPlayer @target
+        if pl?
+            if pl.indoor
+                log=
+                    mode:"skill"
+                    to:@id
+                    comment:"你和#{pl.name}进行了友好的会谈。"
+                splashlog game.id,game,log
+                log=
+                    mode:"skill"
+                    to:pl.id
+                    comment:"你和{@name} 进行了友好的会谈。"
+                splashlog game.id,game,log
+            else
+                log=
+                    mode:"skill"
+                    to:pl.id
+                    comment:"#{pl.name}不在家。。。"
+                splashlog game.id,game,log
+class GuokrHuman extends GuokrPlayer
+    type:"GuokrHuman"
+    jobname:"平民（魅影）"
+    makejobinfo:(game,result)->
+        super
+class GuokrWolf extends GuokrPlayer
+    type:"GuokrHuman"
+    jobname:"狼人（魅影）"
+    team:"Werewolf"
+    getSpeakChoice:(game)->
+        ["werewolf"].concat super
+    isListener:(game,log)->
+        if log.mode=="werewolf"
+            true
+        else super
+    job:(game,playerid,query)->
+        if query.jobtype=="GuokrPlayer"
+            # 拜访啦
+            return super
+    makejobinfo:(game,result)->
+        super
+        result.wolves=game.players.filter((x)->x.isWerewolf()).map (x)->
+            x.publicinfo()
+        if game.night
+            result.open.push "GuokrWolf1"#吞噬
+            result.open.push "GuokrWolf2"#感染
+class GuokrHunter extends GuokrPlayer
+    type:"GuokrHuman"
+    jobname:"猎人（魅影）"
+    constructor:->
+        super
+        @equipgiven=true
+        @holywater=true
+    deadJobdone:@equipgiven
+    deadsunset:(game)->
+        #死后到晚上就不能给了
+        @equipgiven=true
+    job:(game,playerid,query)->
+        if query.jobtype=="GuokrPlayer"
+            # 拜访啦
+            return super
+    isListener:(game,log)->
+        if log.mode=="couple"
+            true
+        else super
+    getSpeakChoice:(game)->
+        ["couple"].concat super
+    makejobinfo:(game,result)->
+        super
+        result.peers=game.players.filter((x)->x.isJobType "GuokrHuman").map (x)->
+            x.publicinfo()
+        if game.night && !@dead
+            result.open.push "GuokrHunter1"#银弹
+            result.open.push "GuokrHunter2"#守护
+            result.open.push "GuokrHunter3"#罗盘
+            if @holywater
+                result.open.push "GuokrHunter4"
+        if @dead && !@equipgiven
+            result.open.push "GuokrHunter5"
+    dying:(game,found,from)->
+        if found in ["werewolf"]
+            @equipgiven=false
+        super
+class GuokrPriest extends GuokrPlayer
+    type:"GuokrHuman"
+    jobname:"牧师（魅影）"
+    job:(game,playerid,query)->
+        if query.jobtype=="GuokrPlayer"
+            # 拜访啦
+            return super
+    makejobinfo:(game,result)->
+        super
+        if game.night
+            result.open.push "GuokrPriest1" #祈祷
+            result.open.push "GuokrPriest2" #净化
+            result.open.push "GuokrPriest3" #神佑
+            if game.players.length>=13
+                result.open.push "GuokrPriest4" #奉献
+class GuokrBake extends GuokrPlayer
+    type:"GuokrHuman"
+    jobname:"妖怪（魅影）"
+    jobdone:->@action?
+    team:->
+        if @iswolf
+            "Werewolf"
+        else
+            "Human"
+    constructor:->
+        super
+        @iswolf=false
+    job:(game,playerid,query)->
+        if query.jobtype=="GuokrPlayer"
+            # 拜访啦
+            return super
+        if query.jobtype=="GuokrBake1" 
+            #偷窥
+            pl=game.getPlayer playerid
+            unless pl?
+                return "这个玩家不存在。"
+            pl.touched game,@id            
+            @gooutdoor
+            @action="watch"
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 准备去偷窥 #{pl.name} 的家。"
+            splashlog game.id,game,log
+            null
+        else
+            alivepri = game.players.filter (pl)->!pl.dead && pl.isJobType "GuokrPriest"
+            if alivepri.length==0
+                @iswolf=true
+                log=
+                    mode:"skill"
+                    to:@id
+                    comment:"#{@name}决定不做人类的朋友了。"
+                splashlog game.id,game,log
+            else
+                log=
+                    mode:"skill"
+                    to:@id
+                    comment:"#{@name}害怕被牧师教育，还不能投靠狼人。"
+                splashlog game.id,game,log  
+            @setTarget null
+            null
+    makejobinfo:(game,result)->
+        super
+        if game.night
+            result.open.push "GuokrBake1"
+        unless @iswolf
+            result.open.push "GuokrBake2"
 
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
@@ -6740,6 +6946,12 @@ jobs=
     # 开始前
     Waiting:Waiting
     Watching:Watching
+    #果壳魅影
+    GuokrHuman:GuokrHuman
+    GuokrWolf:GuokrWolf
+    GuokrBake:GuokrBake
+    GuokrPriest:GuokrPriest
+    GuokrHunter:GuokrHunter
     
 complexes=
     Complex:Complex
@@ -7647,7 +7859,12 @@ module.exports.actions=(req,res,ss)->
                     else if result=query.mode?.match /^helperwhisper_(.+)$/
                         log.mode="helperwhisper"
                         log.to=result[1]
-
+                    else if result=query.mode?.match /^guokr_(.+)$/
+                        pl=game.getPlayer result[1]
+                        unless pl?
+                            return
+                        log.to=pl.id
+                        log.name="#{player.name}→#{pl.name}"
             splashlog roomid,game,log
             res null
         if player?

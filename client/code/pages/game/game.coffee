@@ -1409,7 +1409,7 @@ speakValueToStr=(game,value)->
             # 帮手先がいない場合（自己への建议）
             "建议"
         else
-            if result=value.match /^gmreply_(.+)$/
+            if result=value.match /^gmreply_(.+)$/ || result=query.mode?.match /^guokr_(.+)$/
                 pl=game.players.filter((x)->x.id==result[1])[0]
                 "→#{pl.name}"
             else if result=value.match /^helperwhisper_(.+)$/

@@ -36,7 +36,7 @@ exports.jobs=["Human","Werewolf","Diviner","Psychic","Madman","Guard","Couple","
 "DrawGirl","CautiousWolf",
 ]
 # ここには入らない职业
-# Light, Neet, MinionSelector,QuantumPlayer, HolyProtected, BloodyMary
+# Light, Neet, MinionSelector,QuantumPlayer, HolyProtected, BloodyMary, Guokr
 
 # 期間限定职业
 ((date)->
@@ -57,13 +57,13 @@ exports.blacks=["Werewolf","WolfDiviner","MadWolf","Lycan","LoneWolf","WolfCub",
 
 # チームたち
 exports.teams=teams=
-    Human:["Human","Diviner","Psychic","Guard","Couple","Poisoner","ToughGuy","Noble","Slave","Magician","Fugitive","Merchant","QueenSpectator","MadWolf","Liar","Light","Cursed","ApprenticeSeer","Diseased","Spellcaster","Lycan","Priest","Prince","PI","Cat","Witch","Oldman","OccultMania","Dog","Dictator","SeersMama","Trapper","RedHood","Counselor","Miko","HolyMarked","WanderingGuard","TroubleMaker","FrankensteinsMonster","BloodyMary","King","SantaClaus","Phantom","DrawGirl","Pyrotechnist","Baker","MentalExaminator"]
-    Werewolf:["Werewolf","Madman","BigWolf","Fanatic","Spy","WolfDiviner","Spy2","Sorcerer","LoneWolf","MinionSelector","WolfCub","WhisperingMad","WolfBoy","GreedyWolf","FascinatingWolf","SolitudeWolf","ToughWolf","ThreateningWolf","ObstructiveMad","PsychoKiller","CautiousWolf","Bomber","Ushinotokimairi"]
+    Human:["Human","Diviner","Psychic","Guard","Couple","Poisoner","ToughGuy","Noble","Slave","Magician","Fugitive","Merchant","QueenSpectator","MadWolf","Liar","Light","Cursed","ApprenticeSeer","Diseased","Spellcaster","Lycan","Priest","Prince","PI","Cat","Witch","Oldman","OccultMania","Dog","Dictator","SeersMama","Trapper","RedHood","Counselor","Miko","HolyMarked","WanderingGuard","TroubleMaker","FrankensteinsMonster","BloodyMary","King","SantaClaus","Phantom","DrawGirl","Pyrotechnist","Baker","MentalExaminator","GuokrHuman","GuokrHunter","GuokrPriest"]
+    Werewolf:["Werewolf","Madman","BigWolf","Fanatic","Spy","WolfDiviner","Spy2","Sorcerer","LoneWolf","MinionSelector","WolfCub","WhisperingMad","WolfBoy","GreedyWolf","FascinatingWolf","SolitudeWolf","ToughWolf","ThreateningWolf","ObstructiveMad","PsychoKiller","CautiousWolf","Bomber","Ushinotokimairi","GuokrWolf"]
     Fox:["Fox","TinyFox","Immoral","Blasphemy"]
     Devil:["Devil"]
     Friend:["Cupid","Lover","BadLady"]
     Vampire:["Vampire"]
-    Others:["Bat","Stalker","Doppleganger","CultLeader","Copier","Tanner","Thief","Hoodlum","QuantumPlayer"],
+    Others:["Bat","Stalker","Doppleganger","CultLeader","Copier","Tanner","Thief","Hoodlum","QuantumPlayer","GuokrBake"],
     Neet:["Neet"]
 
 # カテゴリ分け(半份黑暗火锅でつかうぞ!)
@@ -475,6 +475,30 @@ exports.jobrules=[
               ret.Sorcerer=1
             if number>=28
               ret.Tanner=1
+            ret
+        }
+        {
+          name:"果壳魅影"
+          title:"前往果壳镇魅影村，开始一场奇幻之旅！"
+          minNumber:8
+          rule:(number)->
+            ret={}
+            count=4
+            ret.GuokrPriest=1
+            ret.GuokrBake=1
+            ret.GuokrWolf=1
+            ret.GuokrHunter=1
+            if number>=13
+                ret.GuokrWolf++
+                ret.GuokrHunter++
+                count++
+                count++
+            if number>=19
+                ret.GuokrWolf++
+                ret.GuokrHunter++
+                count++
+                count++
+            ret.GuokrHuman=number-count
             ret
         }
       ]
