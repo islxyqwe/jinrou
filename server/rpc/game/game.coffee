@@ -6057,7 +6057,7 @@ class GuokrHuman extends GuokrPlayer
     makejobinfo:(game,result)->
         super
 class GuokrWolf extends GuokrPlayer
-    type:"GuokrHuman"
+    type:"GuokrWolf"
     jobname:"狼人（魅影）"
     team:"Werewolf"
     isWerewolf:->true
@@ -6079,7 +6079,7 @@ class GuokrWolf extends GuokrPlayer
             result.open.push "GuokrWolf1"#吞噬
             result.open.push "GuokrWolf2"#感染
 class GuokrHunter extends GuokrPlayer
-    type:"GuokrHuman"
+    type:"GuokrHunter"
     jobname:"猎人（魅影）"
     constructor:->
         super
@@ -6116,7 +6116,7 @@ class GuokrHunter extends GuokrPlayer
             @equipgiven=false
         super
 class GuokrPriest extends GuokrPlayer
-    type:"GuokrHuman"
+    type:"GuokrPriest"
     jobname:"牧师（魅影）"
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
@@ -6131,7 +6131,7 @@ class GuokrPriest extends GuokrPlayer
             if game.players.length>=13
                 result.open.push "GuokrPriest4" #奉献
 class GuokrBake extends GuokrPlayer
-    type:"GuokrHuman"
+    type:"GuokrBake"
     jobname:"妖怪（魅影）"
     jobdone:->@action?
     team:->
