@@ -218,6 +218,9 @@ module.exports.actions=(req,res,ss)->
                 if opt.name in (room.players.map (x)->x.name)
                     res error:"昵称 #{opt.name} 已经存在"
                     return
+                if opt.name == "替身君"
+                    res error:"禁止冒名顶替「替身君」"
+                    return
                 if room.gm && room.owner.userid==req.session.userId
                     res error:"GM不能加入游戏"
                     return

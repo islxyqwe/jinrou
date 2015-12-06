@@ -116,10 +116,14 @@ makeOtherPrize=(result)->
         Human:
             10:"白/しろ"
             50:"光/ひかり"
-        Werewlf:
+        Werewolf:
             5:"伪/いつわり"
             10:"黑/くろ"
             50:"暗/やみ"
+        Fox:
+            10:"诈/诈"
+            30:"诡/诡"
+            50:"妖/妖"
     result.loseteamcountprize={}
     result.counterprize=
         # 呪殺
@@ -139,6 +143,7 @@ makeOtherPrize=(result)->
             names:
                 5:"千里眼/せんりがん"
                 10:"心眼/しんがん"
+                30:"必中/必中"
             func:(game,pl)->
                 game.gamelogs.filter((x)->x.id==pl.id && x.event=="divine" && x.flag in Shared.game.blacks).length
             
@@ -269,6 +274,7 @@ makeOtherPrize=(result)->
                 1:"教/きょう"
                 5:"信/しん"
                 10:"徒/と"
+                30:"学/がく"
             func:(game,pl)->
                 game.gamelogs.filter((x)->x.target==pl.id && x.event=="brainwash").length
         # 突然死する
@@ -295,8 +301,10 @@ getplreal=(game,userid)->
 # Complexのtype一致を確かめる
 chkCmplType=(obj,cmpltype)->
     # plがPlayerかただのobjか
+    ###只有一个返回false的默认值，没有重写过，是原作者遗忘了吗？
     if obj.isCmplType?
         return obj.isCmplType cmpltype
+    ###
     if obj.type=="Complex"
         return obj.Complex_type==cmpltype || chkCmplType obj.Complex_main,cmpltype
     else
