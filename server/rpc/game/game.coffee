@@ -5771,8 +5771,9 @@ class Ushinotokimairi extends Madman
         super
 
 class MentalExaminator extends Diviner
-	type:"MentalExaminator"
-	jobname:"精神鉴定师"
+    type:"MentalExaminator"
+    jobname:"精神鉴定师"
+    sleeping:->@target?
     sunset:(game)->
         @setTarget null
         if game.day==1
@@ -5780,12 +5781,11 @@ class MentalExaminator extends Diviner
         else if @scapegoat
             # 身代わり君の自動占い
             r=Math.floor Math.random()*game.players.length
-            @job game,game.players[r].id,{}	
-	sleeping:->true
-	job:(game,playerid)->
-		@setTarget playerid
-		pl=game.getPlayer playerid
-		pl.touched game,@id
+            @job game,game.players[r].id,{}
+    job:(game,playerid)->
+        @setTarget playerid
+        pl=game.getPlayer playerid
+        pl.touched game,@id
         log=
             mode:"skill"
             to:@id
@@ -5795,22 +5795,32 @@ class MentalExaminator extends Diviner
             @dodivine game
             @showdivineresult game
         null
-	dodivine:(game)->
-		pl=game.getPlayer @target
-		p=pl
-		if pl?
-			if pl.isJobType "Stalker"
-				unless !pl.flag
-					p=game.getPlayer pl.flag
-			resultstring=if p.team == "Human"
-				"是正常人"
-			else
-				"非常危险"
-			@results.push {
+    dodivine:(game)->
+        pl=game.getPlayer @target
+        p=pl
+        ids=[]
+        if pl?
+            loop
+                if p.isJobType "Stalker"
+                    unless !p.flag
+                        if p.flag in ids
+                            break
+                        else
+                            ids=ids.concat p.flag
+                            p=game.getPlayer p.flag
+                    else
+                        break
+                else
+                    break
+            resultstring=if p.team == "Human"
+                "是正常人"
+            else
+                "非常危险"
+            @results.push {
                 player: game.getPlayer(@target).publicinfo()
                 result: "根据 #{@name} 的精神鉴定结果，#{pl.name} #{resultstring}。"
             }
-	showdivineresult:(game)->
+    showdivineresult:(game)->
         r=@results[@results.length-1]
         return unless r?
         log=
@@ -5818,8 +5828,8 @@ class MentalExaminator extends Diviner
             to:@id
             comment:r.result
         splashlog game.id,game,log
-		
-
+    divineeffect:(game)->
+    
 # 処理上便宜的に使用
 class GameMaster extends Player
     type:"GameMaster"
@@ -6723,7 +6733,7 @@ jobs=
     Bomber:Bomber
     Blasphemy:Blasphemy
     Ushinotokimairi:Ushinotokimairi
-	MentalExaminator:MentalExaminator
+    MentalExaminator:MentalExaminator
     # 特殊
     GameMaster:GameMaster
     Helper:Helper
@@ -6845,7 +6855,7 @@ jobStrength=
     Bomber:23
     Blasphemy:10
     Ushinotokimairi:19
-	MentalExaminator:65
+    MentalExaminator:65
     
 module.exports.actions=(req,res,ss)->
     req.use 'session'
