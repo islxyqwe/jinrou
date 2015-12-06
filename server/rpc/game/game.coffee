@@ -6060,6 +6060,7 @@ class GuokrWolf extends GuokrPlayer
     type:"GuokrHuman"
     jobname:"狼人（魅影）"
     team:"Werewolf"
+    isWerewolf:->true
     getSpeakChoice:(game)->
         ["werewolf"].concat super
     isListener:(game,log)->

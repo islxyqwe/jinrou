@@ -844,7 +844,17 @@ exports.jobinfo=
         MentalExaminator:
             name:"精神鉴定师"
             color:"#000099"
-			        
+        GuokrHuman:
+            name:"平民"
+            color:"#dddddf"
+        GuokrHunter:
+            name:"猎人"
+            color:"#969ad5"
+        GuokrPriest:
+            name:"牧师"
+            color:"#000088"
+
+            
     Werewolf:
         name:"人狼阵营"
         color:"#DD0000"
@@ -917,7 +927,9 @@ exports.jobinfo=
         Ushinotokimairi:
             name:"丑刻参"
             color:"#c9563c"
-        
+        GuokrWolf:
+            name:"狼人"
+            color:"#ffffff"
         
     Fox:
         name:"妖狐阵营"
@@ -990,6 +1002,9 @@ exports.jobinfo=
         QuantumPlayer:
             name:"量子人类"
             color:"#eeeeee"
+        GuokrBake:
+            name:"妖怪"
+            color:"#111111"
     Neet:
         name:"NEET"
         color:"#aaaaaa"
@@ -1721,6 +1736,14 @@ exports.jobinfos=[
         prefix:"你的玩家编号是第 "
         suffix:" 号"
         type:"raw"
+    }
+    {
+        name:"watchingfireworks",
+        type:"hidden"
+    }
+    {
+        name:"watchingfireworks",
+        type:"hidden"
     }
     {
         name:"watchingfireworks",
