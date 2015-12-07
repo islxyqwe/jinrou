@@ -6021,6 +6021,7 @@ class GuokrPlayer extends Player
         @action=null
         @goneout=false
     job:(game,playerid)->
+        super
         if @flag?
             return "已经不能发动能力了"
         pl=game.getPlayer playerid
@@ -6029,14 +6030,58 @@ class GuokrPlayer extends Player
         pl.touched game,@id
         @gooutdoor
         @action="visit"
+        @setflag "done"
         log=
             mode:"skill"
             to:@id
             comment:"#{@name} 准备去拜访 #{pl.name} 的家。"
         splashlog game.id,game,log
-        @setflag "done"
     sunrise:(game)->
         super
+        if @goneout
+            if Math.random()<0.25
+                pls=[]
+                game.players.forEach (x,i)=>
+                    if x.id==@target
+                        # 前
+                        if i==0
+                            pls.push game.players[game.players.length-1]
+                        else
+                            pls.push game.players[i-1]
+                        # 後
+                        if i>=game.players.length-1
+                            pls.push game.players[0]
+                        else
+                            pls.push game.players[i+1]
+                if pls.length==2
+                    if Math.random()<0.5
+                        if !pls[0].dead
+                            if Math.random()<0.1
+                                log=
+                                    mode:"skill"
+                                    to:pls[0].id
+                                    comment:"你的邻居#{@name}昨晚出门了，你看到他是#{@jobname}。"
+                                splashlog game.id,game,log
+                            else
+                                log=
+                                    mode:"skill"
+                                    to:pls[0].id
+                                    comment:"你的邻居#{@name}昨晚出门了。"
+                                splashlog game.id,game,log
+                    else
+                        if !pls[1].dead
+                            if Math.random()<0.1
+                                log=
+                                    mode:"skill"
+                                    to:pls[1].id
+                                    comment:"你的邻居#{@name}昨晚出门了，你看到他是#{@jobname}。"
+                                splashlog game.id,game,log
+                            else
+                                log=
+                                    mode:"skill"
+                                    to:pls[1].id
+                                    comment:"你的邻居#{@name}昨晚出门了。"
+                                splashlog game.id,game,log
         if @action=="visit"
             @dovisit game
     dovisit:(game)->
