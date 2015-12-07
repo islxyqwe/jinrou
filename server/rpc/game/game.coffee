@@ -6656,13 +6656,20 @@ class GuokrHunter extends GuokrPlayer
             splashlog game.id,game,log
             @equipgiven=true
             if pl.isguokrplayer?
-                if pl.isJobType "GuokrHuman" && !pl.becomewolf
-                    newpl=Player.factory "GuokrLesserHunter"
-                    newpl.setFlag @flag
-                    newpl.holywater=@holywater
-                    pl.transProfile newpl
-                    pl.transferData newpl
-                    pl.ransform game,newpl,false
+                if pl.isJobType "GuokrHuman" 
+                    if !pl.becomewolf
+                        newpl=Player.factory "GuokrLesserHunter"
+                        newpl.setFlag @flag
+                        newpl.holywater=@holywater
+                        pl.transProfile newpl
+                        pl.transferData newpl
+                        pl.ransform game,newpl,false
+                    else
+                        log=
+                            mode:"skill"
+                            to:pl.id
+                            comment:"#{pl.name}收到了一幅装备，然而想了想自己将变成狼人的未来，只好丢掉了。"        
+                        splashlog game.id,game,log
                 else
                     log=
                         mode:"skill"
@@ -6673,7 +6680,7 @@ class GuokrHunter extends GuokrPlayer
                 log=
                     mode:"skill"
                     to:pl.id
-                    comment:"#{pl.name}收到了一幅装备，却无法接受这份装备，只好丢掉了。"        
+                    comment:"#{pl.name}收到了一幅装备，却压根不会用，只好丢掉了。"        
                 splashlog game.id,game,log
         null
     isListener:(game,log)->
@@ -7286,7 +7293,7 @@ class GuokrBake extends GuokrPlayer
                     comment:"#{@name}注意到了房外#{x.name}在进行某种宗教仪式。"
                 splashlog game.id,game,log
             if @success
-                @dovisit game
+                @dowatch game
         @action=null
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
