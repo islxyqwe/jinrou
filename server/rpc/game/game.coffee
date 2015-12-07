@@ -198,7 +198,7 @@ class Game
             @id=room.id
             # GMがいる場合
             @gm= if room.gm then room.owner.userid else null
-        
+        @bullet=10
         @logs=[]
         @players=[]         # 村人たち
         @participants=[]    # 参加者全て(@playersと同じ内容含む）
@@ -970,6 +970,12 @@ class Game
                     player.sunrise this
                 else
                     player.deadsunrise this
+            if @day mod 2==1 && @rule.jobrule=="主题配置.果壳魅影"
+                hunters=@players.filter (pl)->!pl.dead && pl.isJobType "GuokrHunter"
+                hunters=hunters.concat @players.filter (pl)->!pl.dead && pl.isJobType "GuokrLesserHunter"
+                if hunters.length>0
+                    r=Math.floor Math.random()*hunters.length
+                    hunters[r].dodivine this
             for pl in @players
                 if !pl.dead
                     pl.votestart this
@@ -6016,8 +6022,12 @@ class GuokrPlayer extends Player
     sleeping:->true
     jobdone:->@flag?
     isguokrplayer:->true
+    psychicResult:if @becomewolf
+        "感染者"
+    else
+        "村人"
     getSpeakChoice:(game)->
-        alive=game.players.filter (x)->!x.dead
+        alive=game.players.filter (x)->!x.dead&&x.isguokrplayer?
         pls=for pl in alive
             "gmreply_#{pl.id}"
         super.concat pls
@@ -6025,6 +6035,19 @@ class GuokrPlayer extends Player
         super
         @goneout=false
         @action=null
+        @watched=[]
+        @visited=[]
+        @cured=[]
+        @blessed=0
+        @immured=0
+        @guarded=0
+        @undefeated=0
+        @becomewolf=false
+        @isprotected=[]
+        @isshot=[]
+        @isbitten=[]
+        @becomewolfday=0
+        @success=true
     isJobType:(type)->
         # 便宜的
         if type=="GuokrPlayer"
@@ -6032,9 +6055,39 @@ class GuokrPlayer extends Player
         super
     sunset:(game)->
         super
+        if @undefeated>0
+            @undefeated--        
+        if @blessed>0
+            @blessed--
+        if @immured>0
+            @immured--
+        if @guarded>0
+            @guarded--
+        if @becomewolf && @becomewolfday==0
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 受到感染变成了狼人。"
+            splashlog game.id,game,log
+            newpl=Player.factory "GuokrWolf"
+            newpl.setFlag @flag
+            @transProfile newpl
+            @transferData newpl
+            @transform game,newpl,false
+            game.splashjobinfo game.players.filter (x)=>x.id!=@id && x.isWerewolf()
+            game.splashjobinfo [this]
+        else if @becomewolf
+            @becomewolfday--
         @setTarget null
+        @watched=[]
+        @visited=[]
+        @isprotected=[]
+        @cured=[]
+        @isshot=[]
+        @isbitten=[]
         @action=null
         @goneout=false
+        @success=true
     job:(game,playerid,query)->
         if @flag?
             return "已经不能发动能力了"
@@ -6048,18 +6101,20 @@ class GuokrPlayer extends Player
         @goneout=true
         @action="visit"
         @setFlag "done"
+        if pl.isguokrplayer?
+            pl.visited=pl.visited.concat [this]
         log=
             mode:"skill"
             to:@id
             comment:"#{@name} 准备去拜访 #{pl.name} 的家。"
         splashlog game.id,game,log
-    sunrise:(game)->
+    midnight:(game)->
         super
         if @goneout
             if Math.random()<0.25
                 pls=[]
                 game.players.forEach (x,i)=>
-                    if x.id==@target
+                    if x.id==@id
                         # 前
                         if i==0
                             pls.push game.players[game.players.length-1]
@@ -6100,27 +6155,82 @@ class GuokrPlayer extends Player
                                     comment:"#{pls[1].name}发现邻居#{@name}昨晚出门了。"
                                 splashlog game.id,game,log
         if @action=="visit"
-            @dovisit game
-    dovisit:(game)->
-        pl=game.getPlayer @target
-        if pl?
-            unless pl.goneout
+            pl=game.getPlayer @target
+            pl.visited.forEach(x,i)=>
+                if x.id==@id
+                    pl.visited.splice i,1
+            if pl.isprotected.length>0 && @success
+                if Math.random()<0.5
+                    @success=false
+                    x=pl.isprotected.pop()
+                    x.target=@id
+                    x.action="bullet"
+                    x.dobullet game
+                    x.action=""
+            if pl.isbitten.length>0 && @success
+                @success=false
+                x=pl.isbitten.pop()
+                x.success=false
+                x.target=@id
+                x.action="eat"
+                x.doeat game
+                x.action=""
+            if pl.isshot.length>0 && @success
+                @success=false
+                x=pl.isshot.pop()
+                x.success=false
+                x.target=@id
+                x.action="bullet"
+                x.dobullet game
+                x.action=""
+            if pl.cured.length>0 && @success
+                x=pl.cured[0]
                 log=
                     mode:"skill"
                     to:@id
-                    comment:"#{@name}和#{pl.name}进行了友好的会谈。"
+                    comment:"#{@name}注意到了窗外#{x.name}在进行某种宗教仪式。"
                 splashlog game.id,game,log
-                log=
-                    mode:"skill"
-                    to:pl.id
-                    comment:"#{@name}和#{pl.name}进行了友好的会谈。"
-                splashlog game.id,game,log
+            if @success
+                @dovisit game
+    dovisit:(game)->
+        pl=game.getPlayer @target
+        if pl?
+            if pl.isguokrplayer?
+                unless pl.goneout
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}和#{pl.name}进行了友好的会谈。"
+                    splashlog game.id,game,log
+                    log=
+                        mode:"skill"
+                        to:pl.id
+                        comment:"#{@name}和#{pl.name}进行了友好的会谈。"
+                    splashlog game.id,game,log
+                else
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}发现#{pl.name}不在家。。。"
+                    splashlog game.id,game,log
             else
-                log=
-                    mode:"skill"
-                    to:pl.id
-                    comment:"#{@name}发现#{pl.name}不在家。。。"
-                splashlog game.id,game,log
+                unless pl.jobdone
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}和#{pl.name}进行了友好的会谈。"
+                    splashlog game.id,game,log
+                    log=
+                        mode:"skill"
+                        to:pl.id
+                        comment:"#{@name}和#{pl.name}进行了友好的会谈。"
+                    splashlog game.id,game,log
+                else
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}发现#{pl.name}不在家。。。"
+                    splashlog game.id,game,log
     makejobinfo:(game,result)->
         super
         if game.night
@@ -6129,14 +6239,21 @@ class GuokrPlayer extends Player
 class GuokrHuman extends GuokrPlayer
     type:"GuokrHuman"
     jobname:"平民（魅影）"
-    makejobinfo:(game,result)->
-        super
 class GuokrWolf extends GuokrPlayer
     type:"GuokrWolf"
     jobname:"狼人（魅影）"
     team:"Werewolf"
     isWerewolf:->true
     jobdone:->@action?
+    fortuneResult:"人狼"
+    psychicResult:"人狼"
+    constructor:->
+        super
+        @injured=0
+    sunset:(game)->
+        super
+        if @injured>0
+            injured--
     getSpeakChoice:(game)->
         ["werewolf"].concat super
     isListener:(game,log)->
@@ -6152,17 +6269,256 @@ class GuokrWolf extends GuokrPlayer
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
             return super
+        if query.jobtype=="GuokrWolf1"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "这个玩家不存在。"
+            if pl.id==@id
+                return "不能对自己使用"
+            if pl.isWerewolf()
+                return "不能袭击同伴"            
+            @setTarget playerid
+            pl.touched game,@id
+            @goneout=true
+            @action="eat"
+            if pl.isguokrplayer?
+                pl.isbitten=pl.isbitten.concat [this]   
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 准备去吞噬 #{pl.name} 。"
+            splashlog game.id,game,log
+            null
+        if query.jobtype=="GuokrWolf2"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "这个玩家不存在。"
+            if @injured>0
+                return "受伤了不能感染。"
+            if pl.id==@id
+                return "不能对自己使用"
+            if pl.isWerewolf()
+                return "不能袭击同伴"          
+            unless pl.isguokrplayer?
+                return "不能对非魅影居民做这个"
+            if pl.isguokrplayer?
+                pl.isbitten=pl.isbitten.concat [this]
+            @setTarget playerid
+            pl.touched game,@id
+            @goneout=true
+            @action="infect"
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 准备去感染 #{pl.name} 。"
+            splashlog game.id,game,log
+        null
+    midnight:(game)->
+        super
+        if @action=="eat"
+            pl=game.getPlayer @target
+            pl.isbitten.forEach(x,i)=>
+                if x.id==@id
+                    pl.isbitten.splice i,1
+            if pl.isprotected.length>0 && @success
+                if Math.random()<0.1
+                    @success=false
+                    x=pl.isprotected.pop()
+                    x.target=@id
+                    x.action="bullet"
+                    x.dobullet game
+                    x.action=""
+                else if Math.random()<0.33
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{x.name}发现#{@name}是狼人!"
+                    splashlog game.id,game,log
+                else if Math.random()<0.5
+                    injured=2
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{@name}受了伤，第二天不能传染。。。"
+                    splashlog game.id,game,log
+            if pl.watched.length>0 && @success
+                x=pl.watched.pop()
+                if Math.random()<0.5
+                    @success=false
+                    @target=x.id
+                    @action="eat"
+                    @doeat game
+                    @action=""
+                else
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{x.name}差点被#{@name}咬死！"
+                    splashlog game.id,game,log
+            if pl.visited.length>0 && @success
+                x=pl.visited.pop()
+                @success=false
+                @target=x.id
+                @action="eat"
+                @doeat game
+                @action=""
+            if pl.cured.length>0 && @success
+                x=pl.cured.pop()
+                @success=false
+                @target=x.id
+                @action="eat"
+                @doeat game
+                @action=""
+            if @success
+                @doeat game
+        if @action=="infect"
+            pl=game.getPlayer @target
+            pl.isbitten.forEach(x,i)=>
+                if x.id==@id
+                    pl.isbitten.splice i,1
+            if pl.isprotected.length>0 && @success
+                if Math.random()<0.1
+                    @success=false
+                    x=pl.isprotected.pop()
+                    x.target=@id
+                    x.action="bullet"
+                    x.dobullet game
+                    x.action=""
+                else if Math.random()<0.33
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{x.name}发现#{@name}是狼人!"
+                    splashlog game.id,game,log
+                else if Math.random()<0.5
+                    injured=2
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{@name}受了伤，第二天不能传染。。。"
+                    splashlog game.id,game,log
+            if pl.watched.length>0 && @success
+                x=pl.watched.pop()
+                if Math.random()<0.5
+                    @success=false
+                    @target=x.id
+                    @action="eat"
+                    @doeat game
+                    @action=""
+                else
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{x.name}差点被#{@name}咬死！"
+                    splashlog game.id,game,log
+            if pl.visited.length>0 && @success
+                x=pl.visited.pop()
+                @success=false
+                @target=x.id
+                @action="eat"
+                @doeat game
+                @action=""
+            if pl.cured.length>0 && @success
+                x=pl.cured.pop()
+                @success=false
+                @target=x.id
+                @action="eat"
+                @doeat game
+                @action=""
+            if @success
+                @doinfect game
+    doeat:(game)->
+        t=game.getPlayer @target
+        return unless t?
+        if t.dead
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 不能吞噬# {t.name} 。"
+            splashlog game.id,game,log
+        else
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 吞噬了 #{t.name} 。"
+            splashlog game.id,game,log
+        number=0.95
+        if t.isguokrplayer?
+            if t.guarded!=0
+                number=number-0.3
+            if t.blessed!=0
+                number=number-0.5
+            if t.undefeated!=0
+                number=0
+        if Math.random()<number
+            t.success=false
+            t.die game,"werewolf"
+        else
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 没能咬死 #{t.name} ..."
+            splashlog game.id,game,log
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{t.name}差点被狼人袭击咬死，在逃脱的那一刹那，看到了来袭者是 #{@name} ..."
+            splashlog game.id,game,log
+    doinfect:(game)->
+        t=game.getPlayer @target
+        return unless t?
+        if t.dead
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 不能感染# {t.name} 。"
+            splashlog game.id,game,log
+        else
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 感染了 #{t.name} 。"
+            splashlog game.id,game,log
+        number=0.85
+        if t.isguokrplayer?
+            if t.guarded!=0
+                number=number-0.3
+            if t.blessed!=0
+                number=0
+            if t.undefeated!=0
+                number=0
+        if Math.random()<number
+            if t.isguokrplayer?
+                if !t.becomewolf
+                    t.becomewolf=true
+                    t.becomewolfday=1
+                    if Math.random()<0.5
+                        t.becomewolfday=2
+                    log=
+                        mode:"skill"
+                        to:t.id
+                        comment:"#{t.name}今天被闯进来的狼人感染了 。"
+                    splashlog game.id,game,log
+        else
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 没能感染 #{t.name} ..."
+            splashlog game.id,game,log
     makejobinfo:(game,result)->
         super
         result.wolves=game.players.filter((x)->x.isWerewolf()).map (x)->
             x.publicinfo()
         if game.night
             result.open.push "GuokrWolf1"#吞噬
-            result.open.push "GuokrWolf2"#感染
+            if @injured==0
+                result.open.push "GuokrWolf2"#感染
 class GuokrHunter extends GuokrPlayer
     type:"GuokrHunter"
     jobname:"猎人（魅影）"
     jobdone:->@action?
+    isReviver:->!@equipgiven || !@dead
+    ishunter:true
     constructor:->
         super
         @equipgiven=true
@@ -6172,10 +6528,138 @@ class GuokrHunter extends GuokrPlayer
     deadsunset:(game)->
         #死后到晚上就不能给了
         @equipgiven=true
+    midnight:(game)->
+        super
+        if @action=="bullet"
+            pl=game.getPlayer @target
+            pl.isshot.forEach(x,i)=>
+                if x.id==@id
+                    pl.isshot.splice i,1
+            if pl.watched.length>0 && @success
+                x=pl.watched.pop()
+                if Math.random()<0.5
+                    @success=false
+                    @target=x.id
+                    @action="bullet"
+                    @dobullet game
+                    @action=""
+                else
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{x.name}差点被#{@name}一枪崩死！"
+                    splashlog game.id,game,log
+            if pl.visited.length>0 && @success
+                x=pl.visited.pop()
+                @success=false
+                @target=x.id
+                @action="bullet"
+                @dobullet game
+                @action=""
+            if pl.cured.length>0 && @success
+                x=pl.cured.pop()
+                @success=false
+                @target=x.id
+                @action="bullet"
+                @dobullet game
+                @action=""
+            if @success
+                @dobullet game
+        if @action=="divine" && @success
+            @dodivine game
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
             return super
+        if query.jobtype=="GuokrHunter1"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "这个玩家不存在。"
+            if pl.id==@id
+                return "不能对自己使用"          
+            @setTarget playerid
+            pl.touched game,@id
+            if pl.isguokrplayer?
+                pl.isshot=pl.isshot.concat [this]  
+            @goneout=true
+            @action="bullet"
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 准备射击 #{pl.name} 。"
+            splashlog game.id,game,log
+            null
+        if query.jobtype=="GuokrHunter2"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "这个玩家不存在。"        
+            @setTarget playerid
+            @goneout=true
+            @action="protect"
+            if 
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 守护了 #{pl.name} 。"
+            splashlog game.id,game,log
+            if pl.isguokrplayer?
+                pl.isprotected=pl.isprotected.concat [this]  
+            else
+                newpl=Player.factory null,pl,null,Guarded   # 守られた人
+                pl.transProfile newpl
+                newpl.cmplFlag=@id  # 护卫元cmplFlag
+                pl.transform game,newpl,true
+                newpl.touched game,@id
+            null
+        if query.jobtype=="GuokrHunter3"
+            @goneout=true
+            @action="divine"
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 尝试借助罗盘的力量。"
+            splashlog game.id,game,log
+            null
+        if query.jobtype=="GuokrHunter4"
+            unless @holywater
+                return "已经喝掉了"
+            if @becomewolf&&
+                @becomewolf=false
+                @holywater=false
+                @action="holywater"
+                log=
+                    mode:"skill"
+                    to:@id
+                    comment:"#{@name} 喝掉了圣水，不再是感染者了。"        
+                splashlog game.id,game,log
+            else
+                return "还没被感染"
+            null
+        if query.jobtype=="GuokrHunter5"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "这个玩家不存在。"
+            if pl.dead
+                return "他已经死了"
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 把装备留给了 #{pl.name} 。"        
+            splashlog game.id,game,log
+            if pl.isJobType "GuokrHuman" && !pl.becomewolf?
+                newpl=Player.factory "GuokrLesserHunter"
+                newpl.setFlag pl.@flag
+                newpl.holywater=@holywater
+                pl.transProfile newpl
+                pl.transferData newpl
+                pl.ransform game,newpl,false
+            else
+                log=
+                    mode:"skill"
+                    to:pl.id
+                    comment:"#{pl.name}收到了一幅装备，却无法接受这份装备，只好丢掉了。"        
+                splashlog game.id,game,log
+        null
     isListener:(game,log)->
         if log.mode=="couple"
             true
@@ -6192,6 +6676,182 @@ class GuokrHunter extends GuokrPlayer
             # なしでOK!
             return true
         super
+    dodivine:(game)->
+        alivewolves = game.players.filter (pl)->!pl.dead && pl.isWerewolf
+        log=
+            mode:"skill"
+            to:@id
+            comment:"罗盘告诉 #{@name} 场上活着 #{@name} 个狼。"
+        splashlog game.id,game,log
+        pls=game.players.filter (x)->!x.ishunter?
+        r=Math.floor Math.random()*pls.length
+        info=pls[r].jobname
+        @resultstr=""
+        if Math.random()<0.33
+            @resultstr=switch info
+                when "GuokrWolf"
+                    if Math.random()<0.5
+                        "喜欢吃带血的牛排"
+                    else
+                        "对血的气味敏感"
+                when "GuokrPriest"
+                    if Math.random()<0.3
+                        "非常博学，通识多种语言"
+                    else if Math.random()<0.5
+                        "家里有很多宗教藏书"
+                    else
+                        "很擅长治疗人"
+                when "GuokrHuman"
+                    if Math.random()<0.5
+                        "是个懦夫"
+                    else
+                        "有夜盲症"
+                when "GuokrBake"
+                    if Math.random()<0.5
+                        "有失眠症"
+                    else
+                        "身手灵活"
+        else if Math.random()<0.5
+            @resultstr=switch info
+                when "GuokrWolf"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            "的鞋子上有泥土"
+                        else
+                            "晚上好像没睡觉"
+                    else
+                        if Math.random()<0.5
+                            "不识字"
+                        else
+                            "没什么文化"
+                when "GuokrPriest"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            "的鞋子上有泥土"
+                        else
+                            "晚上好像没睡觉"
+                    else
+                        if Math.random()<0.5
+                            "的祖父是被狼人杀死的"
+                        else
+                            "购买了银制的餐具"
+                when "GuokrHuman"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            "不识字"
+                        else
+                            "没什么文化"
+                    else
+                        if Math.random()<0.5
+                            "的祖父是被狼人杀死的"
+                        else
+                            "购买了银制的餐具"
+                when "GuokrBake"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            "的鞋子上有泥土"
+                        else
+                            "晚上好像没睡觉"
+                    else
+                        if Math.random()<0.5
+                            "的祖父是被狼人杀死的"
+                        else
+                            "购买了银制的餐具"
+        else
+            @resultstr=switch info
+                when "GuokrWolf"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            "是个直爽的人"
+                        else
+                            "不喜欢八卦"
+                    else
+                        if Math.random()<0.5
+                            "见到十字架会露出畏色"
+                        else
+                            "无比讨厌圣光相关的东西"
+                when "GuokrPriest"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            "是个直爽的人"
+                        else
+                            "不喜欢八卦"
+                    else
+                        if Math.random()<0.5
+                            "力气很小"
+                        else
+                            "砍树都会受伤"
+                when "GuokrHuman"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            "是个直爽的人"
+                        else
+                            "不喜欢八卦"
+                    else
+                        if Math.random()<0.5
+                            "力气很小"
+                        else
+                            "砍树都会受伤"
+                when "GuokrBake"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            "不识字"
+                        else
+                            "没什么文化"
+                    else
+                        if Math.random()<0.5
+                            "见到十字架会露出畏色"
+                        else
+                            "无比讨厌圣光相关的东西"
+        if @resultstr==""
+            @resultstr="是 #{info}"
+        log=
+            mode:"skill"
+            to:@id
+            comment:"罗盘告诉 #{@name} ，#{@name} #{@resultstr}。"
+        splashlog game.id,game,log
+    dobullet:(game)->
+        t=game.getPlayer @target
+        return unless t?
+        if t.dead
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 不能对# {t.name} 使用银弹。"
+            splashlog game.id,game,log
+        else
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 对 #{t.name} 使用了银弹。"
+            splashlog game.id,game,log
+        if Math.random()*10<game.bullet
+            t.success=false
+            t.die game,"deathnote"
+            if t.isWerewolf()
+                if game.bullet<10
+                    game.bullet++
+            else if t.isguokrplayer?
+                if t.becomewolf
+                    if game.bullet<10
+                        game.bullet++
+                else
+                    if game.bullet>0
+                        game.bullet--
+            else
+                if game.bullet>0
+                    game.bullet--
+        else
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 对 #{t.name} 发射的银弹偏了..."
+            splashlog game.id,game,log
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{t.name}侥幸躲过一次枪击，借着枪口的火光看到了来袭者是 #{@name} ..."
+            splashlog game.id,game,log
     makejobinfo:(game,result)->
         super
         result.peers=game.players.filter((x)->x.isJobType "GuokrHunter").map (x)->
@@ -6208,6 +6868,10 @@ class GuokrHunter extends GuokrPlayer
         if found in ["werewolf"]
             @equipgiven=false
         super
+class GuokrLesserHunter extends GuokrPlayer
+    type:"GuokrLesserHunter"
+    jobname:"二代猎人（魅影）"
+    
 class GuokrPriest extends GuokrPlayer
     type:"GuokrPriest"
     jobname:"牧师（魅影）"
@@ -6216,6 +6880,96 @@ class GuokrPriest extends GuokrPlayer
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
             return super
+        if query.jobtype=="GuokrPriest1"
+            @action="prayer"
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 在家里祷告。"
+            splashlog game.id,game,log
+            @undefeated=1
+            null
+        if query.jobtype=="GuokrPriest2"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "这个玩家不存在。"
+            if pl.id==@id
+                return "不能对自己使用"          
+            @setTarget playerid
+            if pl.isguokrplayer?
+                pl.cured=pl.cured.concat [this]  
+            pl.touched game,@id
+            @goneout=true
+            @action="cure"
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 前往净化 #{pl.name} 。"
+            splashlog game.id,game,log
+            null
+        if query.jobtype=="GuokrPriest3"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "这个玩家不存在。"
+            if pl.id==@id
+                return "不能对自己使用"          
+            @setTarget playerid
+            pl.touched game,@id
+            @action="bless"
+            if pl.isguokrplayer?
+                pl.blessed=2
+            else
+                newpl=Player.factory null,pl,null,HolyProtected # 守られた人
+                pl.transProfile newpl
+                newpl.cmplFlag=@id  # 护卫元
+                pl.transform game,newpl,true
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 在家里祝福了 #{pl.name} 。"
+            splashlog game.id,game,log
+            null
+        if query.jobtype=="GuokrPriest4"
+            @action="dedicate"
+            @undefeated=1
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 将自己奉献给了圣光。"
+            splashlog game.id,game,log
+        null
+    docure:(game)->
+        pl=game.getPlayer @target
+        if pl.isguokrplayer?
+            if pl.becomewolf
+                pl.becomewolf=false
+            else
+                pl.immured=2
+    dobless:(game)->
+        pl=game.getPlayer @target
+        log=
+            mode:"skill"
+            to:pl.id
+            comment:"#{pl.name} 感觉有神圣的力量在保护你。"
+        splashlog game.id,game,log
+    dodedicate:(game)->
+        pls = game.players.filter (pl)->pl.isguokrplayer?
+        infs = pls.filter (pl)->pl.becomewolf
+        infs.forEach(x)=>
+            @target=x.id
+            @docure game
+        if !@becomewolf
+            hunters=game.players.filter (pl)->!pl.dead && pl.isJobType "GuokrHunter"
+            hunters=hunters.concat @players.filter (pl)->!pl.dead && pl.isJobType "GuokrLesserHunter"
+            wolves=game.players.filter (pl)->!pl.dead && pl.isWerewolf()
+            if hunters.length>0
+                r=Math.floor Math.random()*hunters.length
+                s=Math.floor Math.random()*wolves.length
+                log=
+                    mode:"skill"
+                    to:hunters[r].id
+                    comment:"#{hunters[r].name} 接到了圣光的指引，狼人是#{wolves[s].name}。"
+                splashlog game.id,game,log
     checkJobValidity:(game,query)->
         if query.jobtype=="GuokrPriest4" || query.jobtype=="GuokrPriest1"
             # なしでOK!
@@ -6226,6 +6980,57 @@ class GuokrPriest extends GuokrPlayer
         if type.match /^GuokrPriest(.+)$/
             return true
         super
+    midnight:(game)->
+        super
+        if @action=="dedicate" && @success
+            @dodedicate game
+        if @action=="bless" && @success
+            @dobless game
+        if @action=="cure" && @success
+            pl=game.getPlayer @target
+            pl.cured.forEach(x,i)=>
+                if x.id==@id
+                    pl.cured.splice i,1
+            if pl.isprotected.length>0 && @success
+                if Math.random()<0.5
+                    @success=false
+                    x=pl.isprotected.pop()
+                    x.target=@id
+                    x.action="bullet"
+                    x.dobullet game
+                    x.action=""
+            if pl.isbitten.length>0 && @success
+                @success=false
+                x=pl.isbitten.pop()
+                x.success=false
+                x.target=@id
+                x.action="eat"
+                x.doeat game
+                x.action=""
+            if pl.isshot.length>0 && @success
+                @success=false
+                x=pl.isshot.pop()
+                x.success=false
+                x.target=@id
+                x.action="bullet"
+                x.dobullet game
+                x.action=""
+            if pl.visited.length>0 && @success
+                pl.visited.forEach(x)=>
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{x.name}注意到了窗外#{@name}在进行某种宗教仪式。"
+                    splashlog game.id,game,log
+            if pl.watched.length>0 && @success
+                pl.watched.forEach(x)=>
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{x.name}注意到了房外#{@name}在进行某种宗教仪式。"
+                    splashlog game.id,game,log
+            if @success
+                @dovisit game
     makejobinfo:(game,result)->
         super
         if game.night
@@ -6239,12 +7044,12 @@ class GuokrBake extends GuokrPlayer
     jobname:"妖怪（魅影）"
     jobdone:->@action?
     team:""
-    isWinner:(game,team)->team==@myteam
-    myteam:->
-        if @iswolf
-            return "Werewolf"
-        else
-            return "Human"
+    isWinner:(game,team)->
+        if team=="Werewolf"&& @iswolf
+            return true
+        else if team=="Human" && !@iswolf
+            return true
+        return false
     constructor:->
         super
         @iswolf=false
@@ -6253,10 +7058,48 @@ class GuokrBake extends GuokrPlayer
         if type.match /^GuokrBake(.+)$/
             return true
         super
-    sunrise:(game)->
+    midnight:(game)->
         super
         if @action=="watch"
-            @dowatch game
+            pl=game.getPlayer @target
+            pl.watched.forEach(x,i)=>
+                if x.id==@id
+                    pl.watched.splice i,1
+            if pl.isprotected.length>0 && @success
+                if Math.random()<0.5
+                    @success=false
+                    x=pl.isprotected.pop()
+                    x.target=@id
+                    x.action="bullet"
+                    x.dobullet game
+                    x.action=""
+            if pl.isbitten.length>0 && @success
+                if Math.random()<0.5
+                    @success=false
+                    x=pl.isbitten.pop()
+                    x.success=false
+                    x.target=@id
+                    x.action="eat"
+                    x.doeat game
+                    x.action=""
+            if pl.isshot.length>0 && @success
+                if Math.random()<0.5
+                    @success=false
+                    x=pl.isshot.pop()
+                    x.success=false
+                    x.target=@id
+                    x.action="bullet"
+                    x.dobullet game
+                    x.action=""
+            if pl.cured.length>0 && @success
+                x=pl.cured[0]
+                log=
+                    mode:"skill"
+                    to:@id
+                    comment:"#{@name}注意到了房外#{x.name}在进行某种宗教仪式。"
+                splashlog game.id,game,log
+            if @success
+                @dovisit game
         @action=null
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
@@ -6270,7 +7113,9 @@ class GuokrBake extends GuokrPlayer
             if pl.id==@id
                 return "不能对自己使用"
             @setTarget playerid
-            pl.touched game,@id            
+            pl.touched game,@id   
+            if pl.isguokrplayer?
+                pl.watched=pl.watched.concat [this]  
             @goneout=true
             @action="watch"
             log=
@@ -6280,7 +7125,6 @@ class GuokrBake extends GuokrPlayer
             splashlog game.id,game,log
             null
         else
-            @setTarget playerid
             alivepri = game.players.filter (pl)->!pl.dead && pl.isJobType "GuokrPriest"
             if alivepri.length==0
                 @iswolf=true
@@ -6300,18 +7144,32 @@ class GuokrBake extends GuokrPlayer
     dowatch:(game)->
         pl=game.getPlayer @target
         if pl?
-            unless pl.goneout
-                log=
-                    mode:"skill"
-                    to:@id
-                    comment:"#{@name}看到#{pl.name}在家。"
-                splashlog game.id,game,log
+            if pl.isguokrplayer?
+                unless pl.goneout
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}看到#{pl.name}在家。"
+                    splashlog game.id,game,log
+                else
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}发现#{pl.name}不在家。。。"
+                    splashlog game.id,game,log
             else
-                log=
-                    mode:"skill"
-                    to:pl.id
-                    comment:"#{@name}发现#{pl.name}不在家。。。"
-                splashlog game.id,game,log
+                unless pl.jobdone
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}看到#{pl.name}在家。"
+                    splashlog game.id,game,log
+                else
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}发现#{pl.name}不在家。。。"
+                    splashlog game.id,game,log
     checkJobValidity:(game,query)->
         if query.jobtype=="GuokrBake2"
             # なしでOK!
