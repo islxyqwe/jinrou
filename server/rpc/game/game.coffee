@@ -6596,7 +6596,6 @@ class GuokrHunter extends GuokrPlayer
             @setTarget playerid
             @goneout=true
             @action="protect"
-            if 
             log=
                 mode:"skill"
                 to:@id
