@@ -7223,7 +7223,7 @@ class GuokrPriest extends GuokrPlayer
                         comment:"#{x.name}注意到了房外#{@name}在进行某种宗教仪式。"
                     splashlog game.id,game,log
             if @success
-                @dovisit game
+                @docure game
     makejobinfo:(game,result)->
         super
         if game.night
