@@ -6518,7 +6518,6 @@ class GuokrHunter extends GuokrPlayer
     jobname:"猎人（魅影）"
     jobdone:->@action?
     isReviver:->!@equipgiven || !@dead
-    ishunter:true
     constructor:->
         super
         @equipgiven=true
@@ -6647,7 +6646,7 @@ class GuokrHunter extends GuokrPlayer
             splashlog game.id,game,log
             if pl.isJobType "GuokrHuman" && !pl.becomewolf?
                 newpl=Player.factory "GuokrLesserHunter"
-                newpl.setFlag pl.@flag
+                newpl.setFlag @flag
                 newpl.holywater=@holywater
                 pl.transProfile newpl
                 pl.transferData newpl
@@ -6870,7 +6869,143 @@ class GuokrHunter extends GuokrPlayer
 class GuokrLesserHunter extends GuokrPlayer
     type:"GuokrLesserHunter"
     jobname:"二代猎人（魅影）"
-    
+    jobdone:->@action?
+    constructor:->
+        super
+        @holywater=true
+    midnight:(game)->
+        super
+        if @action=="bullet"
+            pl=game.getPlayer @target
+            pl.isshot.forEach (x,i)=>
+                if x.id==@id
+                    pl.isshot.splice i,1
+            if pl.watched.length>0 && @success
+                x=pl.watched.pop()
+                if Math.random()<0.5
+                    @success=false
+                    @target=x.id
+                    @action="bullet"
+                    @dobullet game
+                    @action=""
+                else
+                    log=
+                        mode:"skill"
+                        to:x.id
+                        comment:"#{x.name}差点被#{@name}一枪崩死！"
+                    splashlog game.id,game,log
+            if pl.visited.length>0 && @success
+                x=pl.visited.pop()
+                @success=false
+                @target=x.id
+                @action="bullet"
+                @dobullet game
+                @action=""
+            if pl.cured.length>0 && @success
+                x=pl.cured.pop()
+                @success=false
+                @target=x.id
+                @action="bullet"
+                @dobullet game
+                @action=""
+            if @success
+                @dobullet game
+    job:(game,playerid,query)->
+        if query.jobtype=="GuokrPlayer"
+            # 拜访啦
+            return super
+        if query.jobtype=="GuokrHunter1"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "这个玩家不存在。"
+            if pl.id==@id
+                return "不能对自己使用"          
+            @setTarget playerid
+            pl.touched game,@id
+            if pl.isguokrplayer?
+                pl.isshot=pl.isshot.concat [this]  
+            @goneout=true
+            @action="bullet"
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 准备射击 #{pl.name} 。"
+            splashlog game.id,game,log
+            null
+        if query.jobtype=="GuokrHunter4"
+            unless @holywater
+                return "已经喝掉了"
+            if @becomewolf
+                @becomewolf=false
+                @holywater=false
+                @action="holywater"
+                log=
+                    mode:"skill"
+                    to:@id
+                    comment:"#{@name} 喝掉了圣水，不再是感染者了。"        
+                splashlog game.id,game,log
+            else
+                return "还没被感染"
+        null
+    isJobType:(type)->
+        # 便宜的
+        if type.match /^GuokrHunter(.+)$/
+            if type=="GuokrHunter4" || type=="GuokrHunter1"
+                return true
+        super
+    checkJobValidity:(game,query)->
+        if query.jobtype=="GuokrHunter4"
+            # なしでOK!
+            return true
+        super
+    dobullet:(game)->
+        t=game.getPlayer @target
+        return unless t?
+        if t.dead
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 不能对# {t.name} 使用银弹。"
+            splashlog game.id,game,log
+        else
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 对 #{t.name} 使用了银弹。"
+            splashlog game.id,game,log
+        if Math.random()*10<game.bullet
+            t.success=false
+            t.die game,"deathnote"
+            if t.isWerewolf()
+                if game.bullet<10
+                    game.bullet++
+            else if t.isguokrplayer?
+                if t.becomewolf
+                    if game.bullet<10
+                        game.bullet++
+                else
+                    if game.bullet>0
+                        game.bullet--
+            else
+                if game.bullet>0
+                    game.bullet--
+        else
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 对 #{t.name} 发射的银弹偏了..."
+            splashlog game.id,game,log
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{t.name}侥幸躲过一次枪击，借着枪口的火光看到了来袭者是 #{@name} ..."
+            splashlog game.id,game,log
+    makejobinfo:(game,result)->
+        super
+        if game.night && !@dead
+            result.open.push "GuokrHunter1"#银弹
+            if @holywater
+                result.open.push "GuokrHunter4"
 class GuokrPriest extends GuokrPlayer
     type:"GuokrPriest"
     jobname:"牧师（魅影）"
