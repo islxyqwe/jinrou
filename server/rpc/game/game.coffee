@@ -1211,8 +1211,8 @@ class Game
             return false
         else if mode=="revote"
             # 重新投票になった
-            @dorevote "revote"
             if @rule.jobrule!="主题配置.果壳魅影"
+                @dorevote "revote"
                 return false
             else
                 log=

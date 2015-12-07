@@ -680,6 +680,8 @@ exports.getrulestr=(rule,jobs={})->
         return "黑暗火锅"
     if rule=="特殊规则.Endless黑暗火锅"
         return "Endless黑暗火锅"
+    if rule=="主题配置.果壳魅影"
+        return "果壳魅影"
     text="#{rule.split('.').pop()} / "
 
     for job in Shared.game.jobs
