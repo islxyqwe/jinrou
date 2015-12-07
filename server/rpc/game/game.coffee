@@ -1236,8 +1236,8 @@ class Game
                 player.die this,"punish",follower
             else
                 alives=@players.filter (x)->!x.dead
-                whovoted=@players.filter (x)->@votingbox.isVoteFinished x
-                if whovoted.length*2<alives.length
+                whovoted=@votingbox.count
+                if whovote*2<alives.length
                     log=
                         mode:"system"
                         comment:"投票人数不足，今天不进行烧烤。"
@@ -1747,6 +1747,7 @@ rule:{
 class VotingBox
     constructor:(@game)->
         @init()
+    count:->@votes.length
     init:->
         # 投票箱を空にする
         @remains=1  # 残り处刑人数
