@@ -1226,7 +1226,7 @@ class Game
             follower=table.filter((obj)-> obj.voteto==player.id).map (obj)->obj.id
             alives=@players.filter (x)->!x.dead
             whovoted=@players.filter (x)->x.voted
-            if @rule.jobrule!="主题配置.果壳魅影" || voted.length*2>=alives.length
+            if @rule.jobrule!="主题配置.果壳魅影" || whovoted.length*2>=alives.length
                 player.die this,"punish",follower
             else
                 log=
