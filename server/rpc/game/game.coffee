@@ -1232,15 +1232,22 @@ class Game
             # 结果が出た 死んだ!
             # だれが投票したか調べる
             follower=table.filter((obj)-> obj.voteto==player.id).map (obj)->obj.id
-            alives=@players.filter (x)->!x.dead
-            whovoted=@players.filter (x)->x.voted
-            if @rule.jobrule!="主题配置.果壳魅影" || whovoted.length*2>=alives.length
+            if @rule.jobrule!="主题配置.果壳魅影" 
                 player.die this,"punish",follower
             else
-                log=
-                    mode:"system"
-                    comment:"投票人数不足，今天不进行烧烤。"
-                splashlog @id,this,log
+                alives=@players.filter (x)->!x.dead
+                whovoted=@players.filter (x)->x.voted
+                if whovoted.length*2<alives.length
+                    log=
+                        mode:"system"
+                        comment:"投票人数不足，今天不进行烧烤。"
+                    splashlog @id,this,log
+                else
+                    log=
+                        mode:"system"
+                        comment:"投票人数有效，进行烧烤。"
+                    splashlog @id,this,log
+                    player.die this,"punish",follower
             if player.dead && @rule.GMpsychic=="on"
                 # GM灵能
                 log=
@@ -6036,7 +6043,7 @@ class GuokrPlayer extends Player
         pl.touched game,@id
         @gooutdoor
         @action="visit"
-        @setflag "done"
+        @setFlag "done"
         log=
             mode:"skill"
             to:@id
