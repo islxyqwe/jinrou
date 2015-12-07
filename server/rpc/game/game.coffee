@@ -6654,13 +6654,21 @@ class GuokrHunter extends GuokrPlayer
                 to:@id
                 comment:"#{@name} 把装备留给了 #{pl.name} 。"        
             splashlog game.id,game,log
-            if pl.isJobType "GuokrHuman" && !pl.becomewolf?
-                newpl=Player.factory "GuokrLesserHunter"
-                newpl.setFlag @flag
-                newpl.holywater=@holywater
-                pl.transProfile newpl
-                pl.transferData newpl
-                pl.ransform game,newpl,false
+            @equipgiven=true
+            if pl.isguokrplayer?
+                if pl.isJobType "GuokrHuman" && !pl.becomewolf
+                    newpl=Player.factory "GuokrLesserHunter"
+                    newpl.setFlag @flag
+                    newpl.holywater=@holywater
+                    pl.transProfile newpl
+                    pl.transferData newpl
+                    pl.ransform game,newpl,false
+                else
+                    log=
+                        mode:"skill"
+                        to:pl.id
+                        comment:"#{pl.name}收到了一幅装备，却无法接受这份装备，只好丢掉了。"        
+                    splashlog game.id,game,log
             else
                 log=
                     mode:"skill"
