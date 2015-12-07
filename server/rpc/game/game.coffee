@@ -6518,6 +6518,7 @@ class GuokrHunter extends GuokrPlayer
     jobname:"猎人（魅影）"
     jobdone:->@action?
     isReviver:->!@equipgiven || !@dead
+    chooseJobDay:(game)->!@equipgiven
     constructor:->
         super
         @equipgiven=true
@@ -6679,134 +6680,134 @@ class GuokrHunter extends GuokrPlayer
         log=
             mode:"skill"
             to:@id
-            comment:"罗盘告诉 #{@name} 场上活着 #{@name} 个狼。"
+            comment:"罗盘告诉 #{@name} 场上活着 #{alivewolves.length} 个狼。"
         splashlog game.id,game,log
         pls=game.players.filter (x)->!x.ishunter?
         r=Math.floor Math.random()*pls.length
         info=pls[r].jobname
         @resultstr=""
         if Math.random()<0.33
-            @resultstr=switch info
+            switch info
                 when "GuokrWolf"
                     if Math.random()<0.5
-                        "喜欢吃带血的牛排"
+                        @resultstr="喜欢吃带血的牛排"
                     else
-                        "对血的气味敏感"
+                        @resultstr="对血的气味敏感"
                 when "GuokrPriest"
                     if Math.random()<0.3
-                        "非常博学，通识多种语言"
+                        @resultstr="非常博学，通识多种语言"
                     else if Math.random()<0.5
-                        "家里有很多宗教藏书"
+                        @resultstr="家里有很多宗教藏书"
                     else
-                        "很擅长治疗人"
+                        @resultstr="很擅长治疗人"
                 when "GuokrHuman"
                     if Math.random()<0.5
-                        "是个懦夫"
+                        @resultstr="是个懦夫"
                     else
-                        "有夜盲症"
+                        @resultstr="有夜盲症"
                 when "GuokrBake"
                     if Math.random()<0.5
-                        "有失眠症"
+                        @resultstr="有失眠症"
                     else
-                        "身手灵活"
+                        @resultstr="身手灵活"
         else if Math.random()<0.5
-            @resultstr=switch info
+            switch info
                 when "GuokrWolf"
                     if Math.random()<0.5
                         if Math.random()<0.5
-                            "的鞋子上有泥土"
+                            @resultstr="的鞋子上有泥土"
                         else
-                            "晚上好像没睡觉"
+                            @resultstr="晚上好像没睡觉"
                     else
                         if Math.random()<0.5
-                            "不识字"
+                            @resultstr="不识字"
                         else
-                            "没什么文化"
+                            @resultstr="没什么文化"
                 when "GuokrPriest"
                     if Math.random()<0.5
                         if Math.random()<0.5
-                            "的鞋子上有泥土"
+                            @resultstr="的鞋子上有泥土"
                         else
-                            "晚上好像没睡觉"
+                            @resultstr="晚上好像没睡觉"
                     else
                         if Math.random()<0.5
-                            "的祖父是被狼人杀死的"
+                            @resultstr="的祖父是被狼人杀死的"
                         else
-                            "购买了银制的餐具"
+                            @resultstr="购买了银制的餐具"
                 when "GuokrHuman"
                     if Math.random()<0.5
                         if Math.random()<0.5
-                            "不识字"
+                            @resultstr="不识字"
                         else
-                            "没什么文化"
+                            @resultstr="没什么文化"
                     else
                         if Math.random()<0.5
-                            "的祖父是被狼人杀死的"
+                            @resultstr="的祖父是被狼人杀死的"
                         else
-                            "购买了银制的餐具"
+                            @resultstr="购买了银制的餐具"
                 when "GuokrBake"
                     if Math.random()<0.5
                         if Math.random()<0.5
-                            "的鞋子上有泥土"
+                            @resultstr="的鞋子上有泥土"
                         else
-                            "晚上好像没睡觉"
+                            @resultstr="晚上好像没睡觉"
                     else
                         if Math.random()<0.5
-                            "的祖父是被狼人杀死的"
+                            @resultstr="的祖父是被狼人杀死的"
                         else
-                            "购买了银制的餐具"
+                            @resultstr="购买了银制的餐具"
         else
-            @resultstr=switch info
+            switch info
                 when "GuokrWolf"
                     if Math.random()<0.5
                         if Math.random()<0.5
-                            "是个直爽的人"
+                            @resultstr="是个直爽的人"
                         else
-                            "不喜欢八卦"
+                            @resultstr="不喜欢八卦"
                     else
                         if Math.random()<0.5
-                            "见到十字架会露出畏色"
+                            @resultstr="见到十字架会露出畏色"
                         else
-                            "无比讨厌圣光相关的东西"
+                            @resultstr="无比讨厌圣光相关的东西"
                 when "GuokrPriest"
                     if Math.random()<0.5
                         if Math.random()<0.5
-                            "是个直爽的人"
+                            @resultstr="是个直爽的人"
                         else
-                            "不喜欢八卦"
+                            @resultstr="不喜欢八卦"
                     else
                         if Math.random()<0.5
-                            "力气很小"
+                            @resultstr="力气很小"
                         else
-                            "砍树都会受伤"
+                            @resultstr="砍树都会受伤"
                 when "GuokrHuman"
                     if Math.random()<0.5
                         if Math.random()<0.5
-                            "是个直爽的人"
+                            @resultstr="是个直爽的人"
                         else
-                            "不喜欢八卦"
+                            @resultstr="不喜欢八卦"
                     else
                         if Math.random()<0.5
-                            "力气很小"
+                            @resultstr="力气很小"
                         else
-                            "砍树都会受伤"
+                            @resultstr="砍树都会受伤"
                 when "GuokrBake"
                     if Math.random()<0.5
                         if Math.random()<0.5
-                            "不识字"
+                            @resultstr="不识字"
                         else
-                            "没什么文化"
+                            @resultstr="没什么文化"
                     else
                         if Math.random()<0.5
-                            "见到十字架会露出畏色"
+                            @resultstr="见到十字架会露出畏色"
                         else
-                            "无比讨厌圣光相关的东西"
+                            @resultstr="无比讨厌圣光相关的东西"
         if @resultstr==""
             @resultstr="是 #{info}"
         log=
             mode:"skill"
             to:@id
-            comment:"罗盘告诉 #{@name} ，#{@name} #{@resultstr}。"
+            comment:"罗盘告诉 #{@name} ，#{pls[r].name} #{@resultstr}。"
         splashlog game.id,game,log
     dobullet:(game)->
         t=game.getPlayer @target
@@ -7074,10 +7075,31 @@ class GuokrPriest extends GuokrPlayer
         null
     docure:(game)->
         pl=game.getPlayer @target
-        if pl.isguokrplayer?
+        if pl.isWerewolf
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name}看到了#{pl.name}在圣光笼罩中痛苦的样子。"
+            splashlog game.id,game,log
+            log=
+                mode:"skill"
+                to:pl.id
+                comment:"#{pl.name}被可恶的#{@name}用圣光折磨了！"
+            splashlog game.id,game,log
+        else if pl.isguokrplayer?
             if pl.becomewolf
+                log=
+                    mode:"skill"
+                    to:@id
+                    comment:"#{@name}成功的净化了#{pl.name}。"
+                splashlog game.id,game,log
                 pl.becomewolf=false
             else
+                log=
+                    mode:"skill"
+                    to:@id
+                    comment:"虽然#{pl.name}没有被感染，#{@name}相信圣光会保佑他的。"
+                splashlog game.id,game,log
                 pl.immured=2
     dobless:(game)->
         pl=game.getPlayer @target
@@ -7178,6 +7200,7 @@ class GuokrBake extends GuokrPlayer
     jobname:"妖怪（魅影）"
     jobdone:->@action?
     team:""
+    chooseJobDay:(game)->!@iswolf
     isWinner:(game,team)->
         if team=="Werewolf"&& @iswolf
             return true
