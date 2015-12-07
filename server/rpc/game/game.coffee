@@ -6622,7 +6622,7 @@ class GuokrHunter extends GuokrPlayer
         if query.jobtype=="GuokrHunter4"
             unless @holywater
                 return "已经喝掉了"
-            if @becomewolf&&
+            if @becomewolf
                 @becomewolf=false
                 @holywater=false
                 @action="holywater"
