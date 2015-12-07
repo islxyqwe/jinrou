@@ -184,8 +184,6 @@ module.exports=
                 session.channel.subscribe "room#{roomid}_notcouple"
         if player.type=="Fox"
             session.channel.subscribe "room#{roomid}_fox"
-        if player.type=="GuokrHunter"
-            session.channel.subscribe "room#{roomid}_hunter"
         ###
 Server=
     game:
@@ -1795,7 +1793,7 @@ class VotingBox
     isVoteAllFinished:->
         alives=@game.players.filter (x)->!x.dead
         alives.every (x)=>
-            x.voted @game,@
+            x.voted @game,@ || x.isguokrplayer
     compareGots:(a,b)->
         # aとbをsort用に(gots)
         # aのほうが小さい: -1 <
@@ -6001,7 +5999,7 @@ class GuokrPlayer extends Player
     getSpeakChoice:(game)->
         alive=game.players.filter (x)->!x.dead
         pls=for pl in alive
-            "guokr_#{pl.id}"
+            "gmreply_#{pl.id}"
         super.concat pls
     constructor:->
         super
@@ -6036,7 +6034,8 @@ class GuokrPlayer extends Player
         @setflag "done"
     sunrise:(game)->
         super
-        @dovisit game
+        if @action=="visit"
+            @dovisit game
     dovisit:(game)->
         pl=game.getPlayer @target
         if pl?
@@ -6057,6 +6056,11 @@ class GuokrPlayer extends Player
                     to:pl.id
                     comment:"#{pl.name}不在家。。。"
                 splashlog game.id,game,log
+    makejobinfo:(game,result)->
+        super
+        if game.night
+            unless @flag?
+                result.open.push "GuokrPlayer"
 class GuokrHuman extends GuokrPlayer
     type:"GuokrHuman"
     jobname:"平民（魅影）"
@@ -6105,7 +6109,7 @@ class GuokrHunter extends GuokrPlayer
             # 拜访啦
             return super
     isListener:(game,log)->
-        if log.mode=="hunter"
+        if log.mode=="couple"
             true
         else super
     isJobType:(type)->
@@ -6114,7 +6118,7 @@ class GuokrHunter extends GuokrPlayer
             return true
         super
     getSpeakChoice:(game)->
-        ["hunter"].concat super
+        ["couple"].concat super
     checkJobValidity:(game,query)->
         if query.jobtype=="GuokrHunter3" || query.jobtype=="GuokrHunter4"
             # なしでOK!
@@ -6177,6 +6181,10 @@ class GuokrBake extends GuokrPlayer
         if type.match /^GuokrBake(.+)$/
             return true
         super
+    sunrise:(game)->
+        super
+        if @action=="watch"
+            @dowatch game
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
@@ -6213,6 +6221,21 @@ class GuokrBake extends GuokrPlayer
                 splashlog game.id,game,log  
             @setTarget null
             null
+    dowatch:(game)->
+        pl=game.getPlayer @target
+        if pl?
+            if pl.indoor
+                log=
+                    mode:"skill"
+                    to:@id
+                    comment:"你看到#{pl.name}在家。"
+                splashlog game.id,game,log
+            else
+                log=
+                    mode:"skill"
+                    to:pl.id
+                    comment:"#{pl.name}不在家。。。"
+                splashlog game.id,game,log
     checkJobValidity:(game,query)->
         if query.jobtype=="GuokrBake2"
             # なしでOK!
@@ -7898,17 +7921,10 @@ module.exports.actions=(req,res,ss)->
                         unless pl?
                             return
                         log.to=pl.id
-                        log.name="GM→#{pl.name}"
+                        log.name="#{player.name}→#{pl.name}"
                     else if result=query.mode?.match /^helperwhisper_(.+)$/
                         log.mode="helperwhisper"
                         log.to=result[1]
-                    else if result=query.mode?.match /^guokr_(.+)$/
-                        log.mode="monologue"
-                        pl=game.getPlayer result[1]
-                        unless pl?
-                            return
-                        log.to=pl.id
-                        log.name="#{player.name}→#{pl.name}"
             splashlog roomid,game,log
             res null
         if player?
