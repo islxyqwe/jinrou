@@ -6042,6 +6042,8 @@ class GuokrPlayer extends Player
         pl=game.getPlayer playerid
         unless pl?
             return "这个玩家不存在。"
+        if pl.id==@id
+            return "不能对自己使用"
         @setTarget playerid
         pl.touched game,@id
         @goneout=true
@@ -6237,11 +6239,13 @@ class GuokrBake extends GuokrPlayer
     type:"GuokrBake"
     jobname:"妖怪（魅影）"
     jobdone:->@action?
-    team:->
+    team:""
+    iswinner:(game,team)->@myteam == team
+    myteam:->
         if @iswolf
-            "Werewolf"
+            return "Werewolf"
         else
-            "Human"
+            return "Human"
     constructor:->
         super
         @iswolf=false
@@ -6264,6 +6268,8 @@ class GuokrBake extends GuokrPlayer
             pl=game.getPlayer playerid
             unless pl?
                 return "这个玩家不存在。"
+            if pl.id==@id
+                return "不能对自己使用"
             @setTarget playerid
             pl.touched game,@id            
             @goneout=true
@@ -6318,7 +6324,6 @@ class GuokrBake extends GuokrPlayer
             result.open.push "GuokrBake1"
         unless @iswolf
             result.open.push "GuokrBake2"
-
 
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
@@ -7993,6 +7998,8 @@ module.exports.actions=(req,res,ss)->
                             return
                         log.to=pl.id
                         log.name="#{player.name}→#{pl.name}"
+                        splashlog roomid,game,log
+                        log.to=player.id
                     else if result=query.mode?.match /^helperwhisper_(.+)$/
                         log.mode="helperwhisper"
                         log.to=result[1]
