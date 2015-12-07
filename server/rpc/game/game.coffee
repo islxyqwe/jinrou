@@ -6127,6 +6127,7 @@ class GuokrHunter extends GuokrPlayer
         if query.jobtype=="GuokrHunter3" || query.jobtype=="GuokrHunter4"
             # なしでOK!
             return true
+        super
     makejobinfo:(game,result)->
         super
         result.peers=game.players.filter((x)->x.isJobType "GuokrHunter").map (x)->
