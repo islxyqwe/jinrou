@@ -7726,7 +7726,7 @@ module.exports.actions=(req,res,ss)->
                 comment:"配置: #{ruleinfo_str}"
             splashlog game.id,game,log
             
-            if query.jobrule in ["特殊规则.黑暗火锅","特殊规则.半份黑暗火锅","特殊规则.Endless黑暗火锅"]
+            if query.jobrule in ["特殊规则.黑暗火锅","特殊规则.半份黑暗火锅","特殊规则.Endless黑暗火锅","主题配置.果壳魅影"]
                 if query.yaminabe_hidejobs==""
                     # 职业は公開される
                     jobinfos=[]
