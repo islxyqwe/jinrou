@@ -6663,7 +6663,7 @@ class GuokrHunter extends GuokrPlayer
                         newpl.holywater=@holywater
                         pl.transProfile newpl
                         pl.transferData newpl
-                        pl.ransform game,newpl,false
+                        pl.transform game,newpl,false
                     else
                         log=
                             mode:"skill"
