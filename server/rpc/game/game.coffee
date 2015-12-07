@@ -1793,7 +1793,7 @@ class VotingBox
     isVoteAllFinished:->
         alives=@game.players.filter (x)->!x.dead
         alives.every (x)=>
-            x.voted @game,@ || x.isguokrplayer
+            x.voted @game,@ || x.isguokrplayer?
     compareGots:(a,b)->
         # aとbをsort用に(gots)
         # aのほうが小さい: -1 <
