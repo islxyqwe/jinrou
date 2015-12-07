@@ -1237,7 +1237,7 @@ class Game
             else
                 alives=@players.filter (x)->!x.dead
                 whovoted=@votingbox.count
-                if whovote*2<alives.length
+                if whovoted*2<alives.length
                     log=
                         mode:"system"
                         comment:"投票人数不足，今天不进行烧烤。"
