@@ -1236,12 +1236,12 @@ class Game
                 player.die this,"punish",follower
             else
                 alives=@players.filter (x)->!x.dead
-                whovoted=@votingbox.count
+                votes=@votingbox.votes
                 log=
                     mode:"system"
-                    comment:"投了 #{whovoted} 票，活人 #{alives.length}"
+                    comment:"投了 #{votes.length} 票，活人 #{alives.length}"
                 splashlog @id,this,log
-                if whovoted*2<alives.length
+                if votes.length*2<alives.length
                     log=
                         mode:"system"
                         comment:"投票人数不足，今天不进行烧烤。"
@@ -6105,7 +6105,7 @@ class GuokrPlayer extends Player
     dovisit:(game)->
         pl=game.getPlayer @target
         if pl?
-            if pl.indoor
+            unless pl.goneout
                 log=
                     mode:"skill"
                     to:@id
@@ -6120,7 +6120,7 @@ class GuokrPlayer extends Player
                 log=
                     mode:"skill"
                     to:pl.id
-                    comment:"#{pl.name}不在家。。。"
+                    comment:"#{@name}发现#{pl.name}不在家。。。"
                 splashlog game.id,game,log
     makejobinfo:(game,result)->
         super
@@ -6301,17 +6301,17 @@ class GuokrBake extends GuokrPlayer
     dowatch:(game)->
         pl=game.getPlayer @target
         if pl?
-            if pl.indoor
+            unless pl.goneout
                 log=
                     mode:"skill"
                     to:@id
-                    comment:"你看到#{pl.name}在家。"
+                    comment:"#{@name}看到#{pl.name}在家。"
                 splashlog game.id,game,log
             else
                 log=
                     mode:"skill"
                     to:pl.id
-                    comment:"#{pl.name}不在家。。。"
+                    comment:"#{@name}发现#{pl.name}不在家。。。"
                 splashlog game.id,game,log
     checkJobValidity:(game,query)->
         if query.jobtype=="GuokrBake2"
