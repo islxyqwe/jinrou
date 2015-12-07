@@ -6016,7 +6016,6 @@ class GuokrPlayer extends Player
     sleeping:->true
     jobdone:->@flag?
     isguokrplayer:->true
-    indoor:->!@goneout
     getSpeakChoice:(game)->
         alive=game.players.filter (x)->!x.dead
         pls=for pl in alive
@@ -6240,7 +6239,7 @@ class GuokrBake extends GuokrPlayer
     jobname:"妖怪（魅影）"
     jobdone:->@action?
     team:""
-    iswinner:(game,team)->@myteam == team
+    isWinner:(game,team)->team==@myteam
     myteam:->
         if @iswolf
             return "Werewolf"
@@ -6324,6 +6323,7 @@ class GuokrBake extends GuokrPlayer
             result.open.push "GuokrBake1"
         unless @iswolf
             result.open.push "GuokrBake2"
+
 
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
