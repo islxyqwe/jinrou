@@ -6664,6 +6664,12 @@ class GuokrHunter extends GuokrPlayer
                         pl.transProfile newpl
                         pl.transferData newpl
                         pl.transform game,newpl,false
+                        log=
+                            mode:"skill"
+                            to:pl.id
+                            comment:"#{pl.name} 变成了 #{newpl.getJobDisp()}。"
+                        splashlog game.id,game,log
+                        game.splashjobinfo [game.getPlayer newpl.id]
                     else
                         log=
                             mode:"skill"
@@ -6995,6 +7001,141 @@ class GuokrLesserHunter extends GuokrPlayer
             # なしでOK!
             return true
         super
+    dodivine:(game)->
+        alives = game.players.filter (pl)->!pl.dead
+        alivewolves = alives.filter (pl)->pl.isWerewolf()
+        log=
+            mode:"skill"
+            to:@id
+            comment:"罗盘告诉 #{@name} 场上活着 #{alivewolves.length} 个狼。"
+        splashlog game.id,game,log
+        pls=game.players.filter (x)->!x.ishunter?
+        r=Math.floor Math.random()*pls.length
+        info=pls[r].type
+        @resultstr=""
+        if Math.random()<0.33
+            switch info
+                when "GuokrWolf"
+                    if Math.random()<0.5
+                        @resultstr="喜欢吃带血的牛排"
+                    else
+                        @resultstr="对血的气味敏感"
+                when "GuokrPriest"
+                    if Math.random()<0.3
+                        @resultstr="非常博学，通识多种语言"
+                    else if Math.random()<0.5
+                        @resultstr="家里有很多宗教藏书"
+                    else
+                        @resultstr="很擅长治疗人"
+                when "GuokrHuman"
+                    if Math.random()<0.5
+                        @resultstr="是个懦夫"
+                    else
+                        @resultstr="有夜盲症"
+                when "GuokrBake"
+                    if Math.random()<0.5
+                        @resultstr="有失眠症"
+                    else
+                        @resultstr="身手灵活"
+        else if Math.random()<0.5
+            switch info
+                when "GuokrWolf"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            @resultstr="的鞋子上有泥土"
+                        else
+                            @resultstr="晚上好像没睡觉"
+                    else
+                        if Math.random()<0.5
+                            @resultstr="不识字"
+                        else
+                            @resultstr="没什么文化"
+                when "GuokrPriest"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            @resultstr="的鞋子上有泥土"
+                        else
+                            @resultstr="晚上好像没睡觉"
+                    else
+                        if Math.random()<0.5
+                            @resultstr="的祖父是被狼人杀死的"
+                        else
+                            @resultstr="购买了银制的餐具"
+                when "GuokrHuman"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            @resultstr="不识字"
+                        else
+                            @resultstr="没什么文化"
+                    else
+                        if Math.random()<0.5
+                            @resultstr="的祖父是被狼人杀死的"
+                        else
+                            @resultstr="购买了银制的餐具"
+                when "GuokrBake"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            @resultstr="的鞋子上有泥土"
+                        else
+                            @resultstr="晚上好像没睡觉"
+                    else
+                        if Math.random()<0.5
+                            @resultstr="的祖父是被狼人杀死的"
+                        else
+                            @resultstr="购买了银制的餐具"
+        else
+            switch info
+                when "GuokrWolf"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            @resultstr="是个直爽的人"
+                        else
+                            @resultstr="不喜欢八卦"
+                    else
+                        if Math.random()<0.5
+                            @resultstr="见到十字架会露出畏色"
+                        else
+                            @resultstr="无比讨厌圣光相关的东西"
+                when "GuokrPriest"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            @resultstr="是个直爽的人"
+                        else
+                            @resultstr="不喜欢八卦"
+                    else
+                        if Math.random()<0.5
+                            @resultstr="力气很小"
+                        else
+                            @resultstr="砍树都会受伤"
+                when "GuokrHuman"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            @resultstr="是个直爽的人"
+                        else
+                            @resultstr="不喜欢八卦"
+                    else
+                        if Math.random()<0.5
+                            @resultstr="力气很小"
+                        else
+                            @resultstr="砍树都会受伤"
+                when "GuokrBake"
+                    if Math.random()<0.5
+                        if Math.random()<0.5
+                            @resultstr="不识字"
+                        else
+                            @resultstr="没什么文化"
+                    else
+                        if Math.random()<0.5
+                            @resultstr="见到十字架会露出畏色"
+                        else
+                            @resultstr="无比讨厌圣光相关的东西"
+        if @resultstr==""
+            @resultstr="是 #{pls[r].jobname}"
+        log=
+            mode:"skill"
+            to:@id
+            comment:"罗盘告诉 #{@name} ，#{pls[r].name} #{@resultstr}。"
+        splashlog game.id,game,log
     dobullet:(game)->
         t=game.getPlayer @target
         return unless t?
