@@ -1410,17 +1410,12 @@ speakValueToStr=(game,value)->
         when "helperwhisper"
             # 帮手先がいない場合（自己への建议）
             "建议"
-        when "hunter"
-            "猎人的对话"
         else
             if result=value.match /^gmreply_(.+)$/
                 pl=game.players.filter((x)->x.id==result[1])[0]
                 "→#{pl.name}"
             else if result=value.match /^helperwhisper_(.+)$/
                 "建议"
-            else if result=query.mode?.match /^guokr_(.+)$/
-                pl=game.players.filter((x)->x.id==result[1])[0]
-                "→#{pl.name}"
 $ ->
     $(window).resize ->
         unless $(".sticky").length > 0

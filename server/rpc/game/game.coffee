@@ -6103,7 +6103,8 @@ class GuokrHunter extends GuokrPlayer
         super
         @equipgiven=true
         @holywater=true
-    deadJobdone:@equipgiven
+    deadJobdone:(game)->
+        @equipgiven
     deadsunset:(game)->
         #死后到晚上就不能给了
         @equipgiven=true
