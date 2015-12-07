@@ -6156,7 +6156,7 @@ class GuokrPlayer extends Player
                                 splashlog game.id,game,log
         if @action=="visit"
             pl=game.getPlayer @target
-            pl.visited.forEach(x,i)=>
+            pl.visited.forEach (x,i)=>
                 if x.id==@id
                     pl.visited.splice i,1
             if pl.isprotected.length>0 && @success
@@ -6317,7 +6317,7 @@ class GuokrWolf extends GuokrPlayer
         super
         if @action=="eat"
             pl=game.getPlayer @target
-            pl.isbitten.forEach(x,i)=>
+            pl.isbitten.forEach (x,i)=>
                 if x.id==@id
                     pl.isbitten.splice i,1
             if pl.isprotected.length>0 && @success
@@ -6373,7 +6373,7 @@ class GuokrWolf extends GuokrPlayer
                 @doeat game
         if @action=="infect"
             pl=game.getPlayer @target
-            pl.isbitten.forEach(x,i)=>
+            pl.isbitten.forEach (x,i)=>
                 if x.id==@id
                     pl.isbitten.splice i,1
             if pl.isprotected.length>0 && @success
@@ -6532,7 +6532,7 @@ class GuokrHunter extends GuokrPlayer
         super
         if @action=="bullet"
             pl=game.getPlayer @target
-            pl.isshot.forEach(x,i)=>
+            pl.isshot.forEach (x,i)=>
                 if x.id==@id
                     pl.isshot.splice i,1
             if pl.watched.length>0 && @success
@@ -6955,7 +6955,7 @@ class GuokrPriest extends GuokrPlayer
     dodedicate:(game)->
         pls = game.players.filter (pl)->pl.isguokrplayer?
         infs = pls.filter (pl)->pl.becomewolf
-        infs.forEach(x)=>
+        infs.forEach (x)=>
             @target=x.id
             @docure game
         if !@becomewolf
@@ -6988,7 +6988,7 @@ class GuokrPriest extends GuokrPlayer
             @dobless game
         if @action=="cure" && @success
             pl=game.getPlayer @target
-            pl.cured.forEach(x,i)=>
+            pl.cured.forEach (x,i)=>
                 if x.id==@id
                     pl.cured.splice i,1
             if pl.isprotected.length>0 && @success
@@ -7016,14 +7016,14 @@ class GuokrPriest extends GuokrPlayer
                 x.dobullet game
                 x.action=""
             if pl.visited.length>0 && @success
-                pl.visited.forEach(x)=>
+                pl.visited.forEach (x)=>
                     log=
                         mode:"skill"
                         to:x.id
                         comment:"#{x.name}注意到了窗外#{@name}在进行某种宗教仪式。"
                     splashlog game.id,game,log
             if pl.watched.length>0 && @success
-                pl.watched.forEach(x)=>
+                pl.watched.forEach (x)=>
                     log=
                         mode:"skill"
                         to:x.id
@@ -7062,7 +7062,7 @@ class GuokrBake extends GuokrPlayer
         super
         if @action=="watch"
             pl=game.getPlayer @target
-            pl.watched.forEach(x,i)=>
+            pl.watched.forEach (x,i)=>
                 if x.id==@id
                     pl.watched.splice i,1
             if pl.isprotected.length>0 && @success
