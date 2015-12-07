@@ -1160,6 +1160,8 @@ class Game
                     "因为没有及时投票猝死了。猝死是十分令人困扰的行为，请务必不要再犯。"
                 when "gone-night"
                     "因为没有及时使用夜间技能猝死了。猝死是十分令人困扰的行为，请务必不要再犯。"
+                when "dedicate"
+                    "化作了圣光"
                 else
                     "死了"
             log=
@@ -6531,7 +6533,7 @@ class GuokrHunter extends GuokrPlayer
         if !@equipgiven
             log=
                 mode:"skill"
-                to:x.id
+                to:@id
                 comment:"#{@name}没能送出装备。。。"
             splashlog game.id,game,log
             @equipgiven=true
@@ -6683,7 +6685,8 @@ class GuokrHunter extends GuokrPlayer
             return true
         super
     dodivine:(game)->
-        alivewolves = game.players.filter (pl)->(!pl.dead && pl.isWerewolf)
+        alives = game.players.filter (pl)->!pl.dead
+        alivewolves = alives.filter (pl)->pl.isWerewolf()
         log=
             mode:"skill"
             to:@id
@@ -6875,13 +6878,13 @@ class GuokrHunter extends GuokrPlayer
             @equipgiven=true
             log=
                 mode:"skill"
-                to:x.id
+                to:@id
                 comment:"#{@name}不能传承。。。"
             splashlog game.id,game,log
         else
             log=
                 mode:"skill"
-                to:x.id
+                to:@id
                 comment:"#{@name}可以选择传承！"
             splashlog game.id,game,log
         super
@@ -7144,6 +7147,7 @@ class GuokrPriest extends GuokrPlayer
                     to:hunters[r].id
                     comment:"#{hunters[r].name} 接到了圣光的指引，狼人是#{wolves[s].name}。"
                 splashlog game.id,game,log
+        @die game,"dedicate"
     checkJobValidity:(game,query)->
         if query.jobtype=="GuokrPriest4" || query.jobtype=="GuokrPriest1"
             # なしでOK!
