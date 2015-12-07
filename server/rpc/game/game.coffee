@@ -6516,18 +6516,25 @@ class GuokrWolf extends GuokrPlayer
 class GuokrHunter extends GuokrPlayer
     type:"GuokrHunter"
     jobname:"猎人（魅影）"
-    jobdone:->@action?
+    jobdone:->@action? && (!@dead || @deadJobdone)
     isReviver:->!@equipgiven || !@dead
     chooseJobDay:(game)->!@equipgiven
     constructor:->
         super
-        @equipgiven=true
+        @equipgiven=false
         @holywater=true
     deadJobdone:(game)->
         @equipgiven
     deadsunset:(game)->
         #死后到晚上就不能给了
-        @equipgiven=true
+        super
+        if !@equipgiven
+            log=
+                mode:"skill"
+                to:x.id
+                comment:"#{@name}没能送出装备。。。"
+            splashlog game.id,game,log
+            @equipgiven=true
     midnight:(game)->
         super
         if @action=="bullet"
@@ -6676,7 +6683,7 @@ class GuokrHunter extends GuokrPlayer
             return true
         super
     dodivine:(game)->
-        alivewolves = game.players.filter (pl)->!pl.dead && pl.isWerewolf
+        alivewolves = game.players.filter (pl)->(!pl.dead && pl.isWerewolf)
         log=
             mode:"skill"
             to:@id
@@ -6684,7 +6691,7 @@ class GuokrHunter extends GuokrPlayer
         splashlog game.id,game,log
         pls=game.players.filter (x)->!x.ishunter?
         r=Math.floor Math.random()*pls.length
-        info=pls[r].jobname
+        info=pls[r].type
         @resultstr=""
         if Math.random()<0.33
             switch info
@@ -6803,7 +6810,7 @@ class GuokrHunter extends GuokrPlayer
                         else
                             @resultstr="无比讨厌圣光相关的东西"
         if @resultstr==""
-            @resultstr="是 #{info}"
+            @resultstr="是 #{pls[r].jobname}"
         log=
             mode:"skill"
             to:@id
@@ -6864,8 +6871,19 @@ class GuokrHunter extends GuokrPlayer
         if @dead && !@equipgiven
             result.open.push "GuokrHunter5"
     dying:(game,found,from)->
-        if found in ["werewolf"]
-            @equipgiven=false
+        unless found in ["werewolf"]
+            @equipgiven=true
+            log=
+                mode:"skill"
+                to:x.id
+                comment:"#{@name}不能传承。。。"
+            splashlog game.id,game,log
+        else
+            log=
+                mode:"skill"
+                to:x.id
+                comment:"#{@name}可以选择传承！"
+            splashlog game.id,game,log
         super
 class GuokrLesserHunter extends GuokrPlayer
     type:"GuokrLesserHunter"
