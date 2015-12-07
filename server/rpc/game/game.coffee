@@ -1236,7 +1236,7 @@ class Game
                 player.die this,"punish",follower
             else
                 alives=@players.filter (x)->!x.dead
-                whovoted=@players.filter (x)->x.voted @,@votingbox
+                whovoted=@players.filter (x)->@votingbox.isVoteFinished x
                 if whovoted.length*2<alives.length
                     log=
                         mode:"system"
