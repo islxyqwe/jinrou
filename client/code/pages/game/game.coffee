@@ -127,6 +127,8 @@ exports.start=(roomid)->
                 $("#jobinfo").append pp "你的饲主是 #{obj.dogOwner.name}"
             if obj.quantumwerewolf_number?
                 $("#jobinfo").append pp "你的玩家编号是第 #{obj.quantumwerewolf_number} 号"
+            if obj.hunters?
+                $("#jobinfo").append pp  "猎人是 #{obj.peers.map((x)->x.name).join(',')}"
             
             if obj.winner?
                 # 勝敗
@@ -1408,13 +1410,17 @@ speakValueToStr=(game,value)->
         when "helperwhisper"
             # 帮手先がいない場合（自己への建议）
             "建议"
+        when "hunter"
+            "猎人的对话"
         else
-            if result=value.match /^gmreply_(.+)$/ || result=query.mode?.match /^guokr_(.+)$/
+            if result=value.match /^gmreply_(.+)$/
                 pl=game.players.filter((x)->x.id==result[1])[0]
                 "→#{pl.name}"
             else if result=value.match /^helperwhisper_(.+)$/
                 "建议"
-
+            else if result=query.mode?.match /^guokr_(.+)$/
+                pl=game.players.filter((x)->x.id==result[1])[0]
+                "→#{pl.name}"
 $ ->
     $(window).resize ->
         unless $(".sticky").length > 0

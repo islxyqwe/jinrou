@@ -184,6 +184,8 @@ module.exports=
                 session.channel.subscribe "room#{roomid}_notcouple"
         if player.type=="Fox"
             session.channel.subscribe "room#{roomid}_fox"
+        if player.type=="GuokrHunter"
+            session.channel.subscribe "room#{roomid}_hunter"
         ###
 Server=
     game:
@@ -1224,7 +1226,7 @@ class Game
             follower=table.filter((obj)-> obj.voteto==player.id).map (obj)->obj.id
             alives=@players.filter (x)->!x.dead
             voted=@players.filter (x)->x.reallyvoted
-            if @rule.jobrule!="主题配置.果壳魅影" || voted.length*2>=ailves.length
+            if @rule.jobrule!="主题配置.果壳魅影" || voted.length*2>=alives.length
                 player.die this,"punish",follower
             else
                 log=
@@ -6094,14 +6096,14 @@ class GuokrHunter extends GuokrPlayer
             # 拜访啦
             return super
     isListener:(game,log)->
-        if log.mode=="couple"
+        if log.mode=="hunter"
             true
         else super
     getSpeakChoice:(game)->
-        ["couple"].concat super
+        ["hunter"].concat super
     makejobinfo:(game,result)->
         super
-        result.peers=game.players.filter((x)->x.isJobType "GuokrHuman").map (x)->
+        result.hunters=game.players.filter((x)->x.isJobType "GuokrHunter").map (x)->
             x.publicinfo()
         if game.night && !@dead
             result.open.push "GuokrHunter1"#银弹
@@ -6161,6 +6163,7 @@ class GuokrBake extends GuokrPlayer
             splashlog game.id,game,log
             null
         else
+            @setTarget playerid
             alivepri = game.players.filter (pl)->!pl.dead && pl.isJobType "GuokrPriest"
             if alivepri.length==0
                 @iswolf=true

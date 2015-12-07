@@ -33,7 +33,7 @@ exports.jobs=["Human","Werewolf","Diviner","Psychic","Madman","Guard","Couple","
 # わんないと人狼
 "Phantom",
 # 月夜の人狼
-"DrawGirl","CautiousWolf",
+"DrawGirl","CautiousWolf","Neet",
 ]
 # ここには入らない职业
 # Light, Neet, MinionSelector,QuantumPlayer, HolyProtected, BloodyMary, Guokr
