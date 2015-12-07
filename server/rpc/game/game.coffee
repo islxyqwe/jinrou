@@ -1187,8 +1187,11 @@ class Game
                 
     # 投票終わりチェック
     # 返り値意味ないんじゃないの?
+
     execute:->
         return false unless @votingbox.isVoteAllFinished()
+        @forcedexecute()
+    forcedexecute:->
         [mode,player,tos,table]=@votingbox.check()
         if mode=="novote"
             # 誰も投票していない・・・
@@ -1629,7 +1632,7 @@ class Game
                     if revoting
                         @dorevote "gone"
                     else
-                        @execute()
+                        @forcedexecute()
                 else
                     return
         timeout()
@@ -1793,7 +1796,7 @@ class VotingBox
     isVoteAllFinished:->
         alives=@game.players.filter (x)->!x.dead
         alives.every (x)=>
-            x.voted @game,@ || x.isguokrplayer?
+            x.voted @game,@
     compareGots:(a,b)->
         # aとbをsort用に(gots)
         # aのほうが小さい: -1 <
@@ -6125,7 +6128,7 @@ class GuokrHunter extends GuokrPlayer
             return true
     makejobinfo:(game,result)->
         super
-        result.hunters=game.players.filter((x)->x.isJobType "GuokrHunter").map (x)->
+        result.peers=game.players.filter((x)->x.isJobType "GuokrHunter").map (x)->
             x.publicinfo()
         if game.night && !@dead
             result.open.push "GuokrHunter1"#银弹
