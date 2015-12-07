@@ -8146,7 +8146,7 @@ jobs=
     GuokrBake:GuokrBake
     GuokrPriest:GuokrPriest
     GuokrHunter:GuokrHunter
-    
+    GuokrLesserHunter:GuokrLesserHunter
 complexes=
     Complex:Complex
     Friend:Friend
