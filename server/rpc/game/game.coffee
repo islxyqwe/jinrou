@@ -1195,9 +1195,16 @@ class Game
         [mode,player,tos,table]=@votingbox.check()
         if mode=="novote"
             # 誰も投票していない・・・
-            @revote_num=Infinity
-            @judge()
-            return false
+            if @rule.jobrule!="主题配置.果壳魅影"
+                @revote_num=Infinity
+                @judge()
+                return false
+            else
+                log=
+                    mode:"system"
+                    comment:"没有人想要烧烤任何人，真是和平的一天。"
+                splashlog @id,this,log
+                @nextturn()                
         # 投票结果
         log=
             mode:"voteresult"
@@ -6020,8 +6027,7 @@ class GuokrPlayer extends Player
         @setTarget null
         @action=null
         @goneout=false
-    job:(game,playerid)->
-        super
+    job:(game,playerid,query)->
         if @flag?
             return "已经不能发动能力了"
         pl=game.getPlayer playerid
@@ -6060,13 +6066,13 @@ class GuokrPlayer extends Player
                                 log=
                                     mode:"skill"
                                     to:pls[0].id
-                                    comment:"你的邻居#{@name}昨晚出门了，你看到他是#{@jobname}。"
+                                    comment:"#{pls[0].name}的邻居#{@name}昨晚出门了，你看到他是#{@jobname}。"
                                 splashlog game.id,game,log
                             else
                                 log=
                                     mode:"skill"
                                     to:pls[0].id
-                                    comment:"你的邻居#{@name}昨晚出门了。"
+                                    comment:"#{pls[0].name}的邻居#{@name}昨晚出门了。"
                                 splashlog game.id,game,log
                     else
                         if !pls[1].dead
@@ -6074,13 +6080,13 @@ class GuokrPlayer extends Player
                                 log=
                                     mode:"skill"
                                     to:pls[1].id
-                                    comment:"你的邻居#{@name}昨晚出门了，你看到他是#{@jobname}。"
+                                    comment:"#{pls[1].name}的邻居#{@name}昨晚出门了，你看到他是#{@jobname}。"
                                 splashlog game.id,game,log
                             else
                                 log=
                                     mode:"skill"
                                     to:pls[1].id
-                                    comment:"你的邻居#{@name}昨晚出门了。"
+                                    comment:"#{pls[1].name}的邻居#{@name}昨晚出门了。"
                                 splashlog game.id,game,log
         if @action=="visit"
             @dovisit game
@@ -6091,12 +6097,12 @@ class GuokrPlayer extends Player
                 log=
                     mode:"skill"
                     to:@id
-                    comment:"你和#{pl.name}进行了友好的会谈。"
+                    comment:"#{@name}和#{pl.name}进行了友好的会谈。"
                 splashlog game.id,game,log
                 log=
                     mode:"skill"
                     to:pl.id
-                    comment:"你和{@name} 进行了友好的会谈。"
+                    comment:"#{@name}和#{pl.name}进行了友好的会谈。"
                 splashlog game.id,game,log
             else
                 log=
@@ -6119,6 +6125,7 @@ class GuokrWolf extends GuokrPlayer
     jobname:"狼人（魅影）"
     team:"Werewolf"
     isWerewolf:->true
+    jobdone:->@action?
     getSpeakChoice:(game)->
         ["werewolf"].concat super
     isListener:(game,log)->
@@ -6144,6 +6151,7 @@ class GuokrWolf extends GuokrPlayer
 class GuokrHunter extends GuokrPlayer
     type:"GuokrHunter"
     jobname:"猎人（魅影）"
+    jobdone:->@action?
     constructor:->
         super
         @equipgiven=true
@@ -6192,6 +6200,7 @@ class GuokrHunter extends GuokrPlayer
 class GuokrPriest extends GuokrPlayer
     type:"GuokrPriest"
     jobname:"牧师（魅影）"
+    jobdone:->@action?
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
