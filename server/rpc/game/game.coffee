@@ -1236,7 +1236,7 @@ class Game
                 player.die this,"punish",follower
             else
                 alives=@players.filter (x)->!x.dead
-                whovoted=@players.filter (x)->x.voted
+                whovoted=@players.filter (x)->x.voted this,@
                 if whovoted.length*2<alives.length
                     log=
                         mode:"system"
@@ -1622,7 +1622,7 @@ class Game
                             x.setNorevive true
                             revoting=true
                         @bury("other")
-                        @judge()
+                        return if @judge()
                         if revoting
                             @dorevote "gone"
                         else
@@ -1642,7 +1642,7 @@ class Game
                         x.setNorevive true
                         revoting=true
                     @bury("other")
-                    @judge()
+                    return if @judge()
                     if revoting
                         @dorevote "gone"
                     else
@@ -1806,7 +1806,6 @@ class VotingBox
     # 处刑人数を増やす
     addPunishedNumber:(num)->
         @remains+=num
-
     isVoteAllFinished:->
         alives=@game.players.filter (x)->!x.dead
         alives.every (x)=>
