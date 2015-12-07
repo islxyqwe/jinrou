@@ -970,7 +970,7 @@ class Game
                     player.sunrise this
                 else
                     player.deadsunrise this
-            if @day mod 2==1 && @rule.jobrule=="主题配置.果壳魅影"
+            if @day%2==1 && @rule.jobrule=="主题配置.果壳魅影"
                 hunters=@players.filter (pl)->!pl.dead && pl.isJobType "GuokrHunter"
                 hunters=hunters.concat @players.filter (pl)->!pl.dead && pl.isJobType "GuokrLesserHunter"
                 if hunters.length>0
