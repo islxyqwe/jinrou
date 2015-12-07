@@ -1236,7 +1236,7 @@ class Game
                 player.die this,"punish",follower
             else
                 alives=@players.filter (x)->!x.dead
-                whovoted=@players.filter (x)->x.voted this,@
+                whovoted=@players.filter (x)->x.voted @,@votingbox
                 if whovoted.length*2<alives.length
                     log=
                         mode:"system"
@@ -6021,8 +6021,6 @@ class GuokrPlayer extends Player
         super
         @goneout=false
         @action=null
-    gooutdoor:->
-        @goneout=true
     isJobType:(type)->
         # 便宜的
         if type=="GuokrPlayer"
@@ -6039,8 +6037,9 @@ class GuokrPlayer extends Player
         pl=game.getPlayer playerid
         unless pl?
             return "这个玩家不存在。"
+        @setTarget playerid
         pl.touched game,@id
-        @gooutdoor
+        @goneout=true
         @action="visit"
         @setFlag "done"
         log=
@@ -6072,13 +6071,13 @@ class GuokrPlayer extends Player
                                 log=
                                     mode:"skill"
                                     to:pls[0].id
-                                    comment:"#{pls[0].name}的邻居#{@name}昨晚出门了，你看到他是#{@jobname}。"
+                                    comment:"#{pls[0].name}发现邻居#{@name}昨晚出门了，而且看到他是#{@jobname}。"
                                 splashlog game.id,game,log
                             else
                                 log=
                                     mode:"skill"
                                     to:pls[0].id
-                                    comment:"#{pls[0].name}的邻居#{@name}昨晚出门了。"
+                                    comment:"#{pls[0].name}发现邻居#{@name}昨晚出门了。"
                                 splashlog game.id,game,log
                     else
                         if !pls[1].dead
@@ -6086,13 +6085,13 @@ class GuokrPlayer extends Player
                                 log=
                                     mode:"skill"
                                     to:pls[1].id
-                                    comment:"#{pls[1].name}的邻居#{@name}昨晚出门了，你看到他是#{@jobname}。"
+                                    comment:"#{pls[1].name}发现邻居#{@name}昨晚出门了，而且看到他是#{@jobname}。"
                                 splashlog game.id,game,log
                             else
                                 log=
                                     mode:"skill"
                                     to:pls[1].id
-                                    comment:"#{pls[1].name}的邻居#{@name}昨晚出门了。"
+                                    comment:"#{pls[1].name}发现邻居#{@name}昨晚出门了。"
                                 splashlog game.id,game,log
         if @action=="visit"
             @dovisit game
@@ -6250,6 +6249,7 @@ class GuokrBake extends GuokrPlayer
         super
         if @action=="watch"
             @dowatch game
+        @action=null
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
@@ -6259,8 +6259,9 @@ class GuokrBake extends GuokrPlayer
             pl=game.getPlayer playerid
             unless pl?
                 return "这个玩家不存在。"
+            @setTarget playerid
             pl.touched game,@id            
-            @gooutdoor
+            @goneout=true
             @action="watch"
             log=
                 mode:"skill"
