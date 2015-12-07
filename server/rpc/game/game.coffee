@@ -6009,6 +6009,11 @@ class GuokrPlayer extends Player
         @action=null
     gooutdoor:->
         @goneout=true
+    isJobType:(type)->
+        # 便宜的
+        if type=="GuokrPlayer"
+            return true
+        super
     sunset:(game)->
         super
         @setTarget null
@@ -6068,6 +6073,11 @@ class GuokrWolf extends GuokrPlayer
         if log.mode=="werewolf"
             true
         else super
+    isJobType:(type)->
+        # 便宜的
+        if type.match /^GuokrWolf(.+)$/
+            return true
+        super
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
@@ -6098,8 +6108,17 @@ class GuokrHunter extends GuokrPlayer
         if log.mode=="hunter"
             true
         else super
+    isJobType:(type)->
+        # 便宜的
+        if type.match /^GuokrHunter(.+)$/
+            return true
+        super
     getSpeakChoice:(game)->
         ["hunter"].concat super
+    checkJobValidity:(game,query)->
+        if query.jobtype=="GuokrHunter3" || query.jobtype=="GuokrHunter4"
+            # なしでOK!
+            return true
     makejobinfo:(game,result)->
         super
         result.hunters=game.players.filter((x)->x.isJobType "GuokrHunter").map (x)->
@@ -6123,6 +6142,16 @@ class GuokrPriest extends GuokrPlayer
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
             return super
+    checkJobValidity:(game,query)->
+        if query.jobtype=="GuokrPriest4" || query.jobtype=="GuokrPriest1"
+            # なしでOK!
+            return true
+        return super
+    isJobType:(type)->
+        # 便宜的
+        if type.match /^GuokrPriest(.+)$/
+            return true
+        super
     makejobinfo:(game,result)->
         super
         if game.night
@@ -6143,6 +6172,11 @@ class GuokrBake extends GuokrPlayer
     constructor:->
         super
         @iswolf=false
+    isJobType:(type)->
+        # 便宜的
+        if type.match /^GuokrBake(.+)$/
+            return true
+        super
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
@@ -6179,12 +6213,18 @@ class GuokrBake extends GuokrPlayer
                 splashlog game.id,game,log  
             @setTarget null
             null
+    checkJobValidity:(game,query)->
+        if query.jobtype=="GuokrBake2"
+            # なしでOK!
+            return true
+        return super
     makejobinfo:(game,result)->
         super
         if game.night
             result.open.push "GuokrBake1"
         unless @iswolf
             result.open.push "GuokrBake2"
+
 
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
@@ -7863,6 +7903,7 @@ module.exports.actions=(req,res,ss)->
                         log.mode="helperwhisper"
                         log.to=result[1]
                     else if result=query.mode?.match /^guokr_(.+)$/
+                        log.mode="monologue"
                         pl=game.getPlayer result[1]
                         unless pl?
                             return
