@@ -1225,7 +1225,7 @@ class Game
             # だれが投票したか調べる
             follower=table.filter((obj)-> obj.voteto==player.id).map (obj)->obj.id
             alives=@players.filter (x)->!x.dead
-            voted=@players.filter (x)->x.reallyvoted
+            whovoted=@players.filter (x)->x.voted
             if @rule.jobrule!="主题配置.果壳魅影" || voted.length*2>=alives.length
                 player.die this,"punish",follower
             else
@@ -1622,7 +1622,7 @@ class Game
                 unless @execute()
                     revoting=false
                     @players.forEach (x)=>
-                        return if x.dead || x.voted(this,@votingbox)
+                        return if x.dead || x.voted(this,@votingbox) || x.isguokrplayer?
                         x.die this,"gone-day"
                         x.setNorevive true
                         revoting=true
@@ -5996,9 +5996,8 @@ class GuokrPlayer extends Player
     jobname:"玩家（魅影）"
     sleeping:->true
     jobdone:->@flag?
+    isguokrplayer:->true
     indoor:->!@goneout
-    voted:(game,votingbox)->true
-    reallyvoted:(game,votingbox)->game.votingbox.isVoteFinished this
     getSpeakChoice:(game)->
         alive=game.players.filter (x)->!x.dead
         pls=for pl in alive
