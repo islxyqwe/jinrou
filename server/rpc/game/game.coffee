@@ -1237,6 +1237,10 @@ class Game
             else
                 alives=@players.filter (x)->!x.dead
                 whovoted=@votingbox.count
+                log=
+                    mode:"system"
+                    comment:"投了 #{whovoted} 票，活人 #{alives.length}"
+                splashlog @id,this,log
                 if whovoted*2<alives.length
                     log=
                         mode:"system"
