@@ -719,8 +719,22 @@ class Game
         splashlog @id,this,log
 
         #死体処理
-        @bury(if @night then "night" else "day")
-
+        deads=@bury(if @night then "night" else "day")
+        if deads.length>0 && @rule.jobrule=="主题配置.果壳魅影" &&!@night
+            alives=@players.filter (x)->!x.dead
+            if alives.length>0
+                r=Math.floor Math.random()*alives.length
+                pl=alives[r]
+                sub=Player.factory "DoctorAssist"  # 副を作る
+                pl.transProfile sub
+                sub.setinfo deads
+                newpl=Player.factory null,pl,sub,Complex
+                pl.transProfile newpl
+                pl.transform game,newpl,true
+                log=
+                    mode:"system"
+                    comment:"#{pl.name} 是验尸官的助手。"
+                splashlog @id,@,log
         if @rule.jobrule=="特殊规则.量子人狼"
             # 量子人狼
             # 全员の確率を出してあげるよーーーーー
@@ -1191,7 +1205,7 @@ class Game
                     name:x.name
                     comment:x.will
                 splashlog @id,this,log
-        deads.length
+        deads
                 
     # 投票終わりチェック
     # 返り値意味ないんじゃないの?
@@ -6235,7 +6249,7 @@ class GuokrPlayer extends Player
                     splashlog game.id,game,log
     makejobinfo:(game,result)->
         super
-        if game.night
+        if game.night&&!@dead
             unless @flag?
                 result.open.push "GuokrPlayer"
 class GuokrHuman extends GuokrPlayer
@@ -6432,7 +6446,7 @@ class GuokrWolf extends GuokrPlayer
     doeat:(game)->
         t=game.getPlayer @target
         return unless t?
-        if t.dead
+        if t.dead || t.isWerewolf()
             log=
                 mode:"skill"
                 to:@id
@@ -6469,7 +6483,7 @@ class GuokrWolf extends GuokrPlayer
     doinfect:(game)->
         t=game.getPlayer @target
         return unless t?
-        if t.dead
+        if t.dead || t.isWerewolf()
             log=
                 mode:"skill"
                 to:@id
@@ -6511,7 +6525,7 @@ class GuokrWolf extends GuokrPlayer
         super
         result.wolves=game.players.filter((x)->x.isWerewolf()).map (x)->
             x.publicinfo()
-        if game.night
+        if game.night&&!@dead
             result.open.push "GuokrWolf1"#吞噬
             if @injured==0
                 result.open.push "GuokrWolf2"#感染
@@ -7367,7 +7381,7 @@ class GuokrPriest extends GuokrPlayer
                 @docure game
     makejobinfo:(game,result)->
         super
-        if game.night
+        if game.night&&!@dead
             result.open.push "GuokrPriest1" #祈祷
             result.open.push "GuokrPriest2" #净化
             result.open.push "GuokrPriest3" #神佑
@@ -7512,11 +7526,100 @@ class GuokrBake extends GuokrPlayer
         return super
     makejobinfo:(game,result)->
         super
-        if game.night
-            result.open.push "GuokrBake1"
-        unless @iswolf
-            result.open.push "GuokrBake2"
-
+        if !@dead
+            if game.night
+                result.open.push "GuokrBake1"
+            unless @iswolf
+                result.open.push "GuokrBake2"
+class DoctorAssist extends Player
+    type:"DoctorAssist"
+    jobname:"验尸官的助手"
+    sleeping:->true
+    jobdone:(game)->game.night || !@target? || !@flag?
+    chooseJobDay:(game)->true
+    constructor:->
+        @deads=[]
+        @guned=[]
+    makeJobSelection:(game)->
+        if !@target?&&!game.night
+            r=super
+            for pl in deads
+                r.push {
+                    name:pl.name
+                    value:pl.id
+                }
+            return r
+        else
+            return super
+    beforebury:(game,type)->
+        if type=="day"
+            # 昼になったとき
+            if game.players.filter((x)->x.dead && x.found).length==0
+                @setTarget ""
+            else
+                @setinfo game.players.filter((x)->x.dead && x.found)
+    setinfo:(deads)->
+        @deads=deads
+        @guned=deads.filter (x)->x.found=="deathnote"
+        @setTarget null
+        @setFlag "Done"
+    job:(game,playerid,query)->
+        if query.jobtype=="DoctorAssist1"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "对象无效。"
+            unless @deads.some((x)->x.id==pl.id)
+                return "不能验那个人的尸体"
+            @setTarget playerid
+            resultstr=""
+            if pl.isWerewolf()
+                resultstr="狼人"
+            else if pl.isguokrplayer?
+                if pl.becomewolf
+                    resultstr="感染者"
+                else
+                    resultstr="村人"
+            if resultstr==""
+                resultstr=pl.psychicResult
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 的验尸结果，#{pl.name} 是 #{resultstr}。"
+            splashlog game.id,game,log
+            if @guned.some((x)->x.id==pl.id)
+                @setFlag null
+         else if query.jobtype=="DoctorAssist2"
+            log=
+                mode:"system"
+                comment:"#{@name} 宣布，猎人错杀无辜！"
+            splashlog game.id,game,log
+            if game.bullet>0
+                game.bullet--
+            if game.bullet>0
+                game.bullet--
+            @setFlag "Done"
+         else if query.jobtype=="DoctorAssist3"
+            log=
+                mode:"system"
+                comment:"#{@name} 宣布，猎人成功的解决了狼！"
+            splashlog game.id,game,log
+            if game.bullet<10
+                game.bullet++
+            if game.bullet<10
+                game.bullet++
+            @setFlag "Done"
+    makeJobInfo:(game,result)->
+        super
+        unless game.night
+            if !@target?
+                result.open.push "DoctorAssist1"
+            if !@flag?
+                result.open.push "DoctorAssist2"
+                result.open.push "DoctorAssist3"
+    sunset:(game)->
+        @uncomplex game,true    # 自己からは抜ける
+        @setTarget null
+        @setFlag "Done"
 
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
