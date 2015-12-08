@@ -7599,7 +7599,12 @@ class DoctorAssist extends Player
                 to:@id
                 comment:"#{@name} 可以宣布这被枪杀的尸体的身份。"
             splashlog game.id,game,log
-            @setFlag null
+            sub=Player.factory "advisedead"   # 副を作る
+            @transProfile sub
+            newpl=Player.factory null,this,sub,Complex    # Complex
+            @transProfile newpl
+            @transform game,newpl,true
+            game.splashjobinfo [this]
     job:(game,playerid,query)->
         if @flag?
             return "已经不能发动能力了"
@@ -7608,16 +7613,77 @@ class DoctorAssist extends Player
         pl=game.getPlayer playerid
         unless pl?
             return "对象无效"
+        unless @deads.some((x)->x.id==pl.id)
+            return "不能验那个人的尸体"
         pl.touched game,@id
         @setTarget playerid    # 处刑する人
-        log=
-            mode:"system"
-            comment:"独裁者 #{@name} 宣布将要处刑 #{pl.name}。"
-        splashlog game.id,game,log
         @setFlag true  # 使用済
         @setTarget playerid
         @docheckdead game
         null
+    checkJobValidity:(game,query)->
+        if query.jobtype=="DoctorAssist3"||query.jobtype=="DoctorAssist2"
+            # なしでOK!
+            return true
+        return super
+    sunset:(game)->
+        super
+        @deads=[]
+        @guned=[]
+        @setTarget null
+        @setFlag null
+        @uncomplex game,true    # 自己からは抜ける
+        pl=game.getPlayer @id
+        pl.sunset game
+class advisedead extends Player
+    type:"advisedead"
+    jobname:"验枪伤死者的助手"
+    isJobType:(type)->
+        # 便宜的
+        if type=="Advisedead1" || type=="Advisedead2"
+            return true
+        super
+    sleeping:->true
+    jobdone:(game)->@flag? || game.night
+    chooseJobDay:(game)->true
+    checkJobValidity:(game,query)->
+        if query.jobtype=="Advisedead1"||query.jobtype=="Advisedead2"
+            # なしでOK!
+            return true
+        return super
+    job:(game,playerid,query)->
+        if query.jobtype=="Advisedead1"
+            log=
+                mode:"system"
+                comment:"#{@name} 宣布，猎人错杀无辜！"
+            splashlog game.id,game,log
+            if game.bullet>0
+                game.bullet--
+            if game.bullet>0
+                game.bullet--
+            @setFlag "Done"
+         else if query.jobtype=="Advisedead2"
+            log=
+                mode:"system"
+                comment:"#{@name} 宣布，猎人成功的解决了狼！"
+            splashlog game.id,game,log
+            if game.bullet<10
+                game.bullet++
+            if game.bullet<10
+                game.bullet++
+            @setFlag "Done"
+        null
+    checkJobValidity:(game,query)->
+        if query.jobtype=="DoctorAssist3"||query.jobtype=="DoctorAssist2"
+            # なしでOK!
+            return true
+        return super
+    sunset:(game)->
+        super
+        @setFlag null
+        @uncomplex game,true    # 自己からは抜ける
+        pl=game.getPlayer @id
+        pl.sunset game
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
 # @cmplFlag も持っていい
