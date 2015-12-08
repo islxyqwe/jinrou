@@ -7554,6 +7554,11 @@ class DoctorAssist extends Player
     sleeping:->true
     jobdone:(game)->game.night || (@target? && @flag?)
     chooseJobDay:(game)->true
+    isJobType:(type)->
+        # 便宜的
+        if type.match /^DoctorAssist(.+)$/
+            return true
+        super
     constructor:->
         @deads=[]
         @guned=[]
@@ -7577,6 +7582,8 @@ class DoctorAssist extends Player
                 @getextrajobselection game.players.filter((x)->x.dead && x.found)
     sunrise:(game)->
         if @deads.length>0
+            @setTarget null
+            @setFlag "Done"
             if @deads.length==1
                 @setTarget @deads[0].id
                 @docheckdead game
@@ -7585,8 +7592,6 @@ class DoctorAssist extends Player
     getextrajobselection:(pls)->
         @deads=pls
         @guned=@deads.filter (x)->x.found=="deathnote"
-        @setTarget null
-        @setFlag "Done"
     docheckdead:(game)->
         pl=game.getPlayer @target
         resultstr=""
@@ -7609,6 +7614,11 @@ class DoctorAssist extends Player
             comment:"#{@name} 宣布对 #{pl.name} 进行验尸。"
         splashlog game.id,game,log
         if @guned.some((x)->x.id==pl.id)
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 可以宣布这被枪杀的尸体的身份。"
+            splashlog game.id,game,log
             @setFlag null
     job:(game,playerid,query)->
         if query.jobtype=="DoctorAssist1"
@@ -7639,10 +7649,14 @@ class DoctorAssist extends Player
             if game.bullet<10
                 game.bullet++
             @setFlag "Done"
+    checkJobValidity:(game,query)->
+        if query.jobtype=="DoctorAssist3"||query.jobtype=="DoctorAssist2"
+            # なしでOK!
+            return true
+        return super
     makeJobInfo:(game,result)->
         super
         unless game.night
-            if !@target?
                 result.open.push "DoctorAssist1"
             if !@flag?
                 result.open.push "DoctorAssist2"
