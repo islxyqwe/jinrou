@@ -334,6 +334,16 @@
           p
             | 请选择要验谁的尸体（非强制）:
             input(type="submit",value="验尸",data-job="DoctorAssist")
+        #form_DoctorAssist1(hidden).jobformarea
+          p
+            input(type="submit",value="宣布猎人滥杀无辜",data-job="DoctorAssist1")
+        #form_DoctorAssist2(hidden).jobformarea
+          p
+            input(type="submit",value="宣布猎人火眼金睛",data-job="DoctorAssist2")
+        #form_DoctorAssist3(hidden).jobformarea
+          p
+            | 请选择要验谁的尸体（非强制）:
+            input(type="submit",value="验尸",data-job="DoctorAssist")
       form#speakform
         p
           input(size="50",name="comment",required)

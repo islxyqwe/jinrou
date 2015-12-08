@@ -6042,7 +6042,7 @@ class GuokrPlayer extends Player
     type:"GuokrPlayer"
     jobname:"玩家（魅影）"
     sleeping:->true
-    jobdone:->@flag?
+    jobdone:(game)->@flag?
     isguokrplayer:->true
     psychicResult:if @becomewolf
         "感染者"
@@ -6267,7 +6267,7 @@ class GuokrWolf extends GuokrPlayer
     jobname:"狼人（魅影）"
     team:"Werewolf"
     isWerewolf:->true
-    jobdone:->@action?
+    jobdone:(game)->@action?
     fortuneResult:"人狼"
     psychicResult:"人狼"
     constructor:->
@@ -6544,7 +6544,7 @@ class GuokrWolf extends GuokrPlayer
 class GuokrHunter extends GuokrPlayer
     type:"GuokrHunter"
     jobname:"猎人（魅影）"
-    jobdone:->@action? && (!@dead || @deadJobdone)
+    jobdone:(game)->@action? && (!@dead || @deadJobdone)
     isReviver:->!@equipgiven || !@dead
     chooseJobDay:(game)->!@equipgiven
     constructor:->
@@ -6941,7 +6941,7 @@ class GuokrHunter extends GuokrPlayer
 class GuokrLesserHunter extends GuokrPlayer
     type:"GuokrLesserHunter"
     jobname:"二代猎人（魅影）"
-    jobdone:->@action?
+    jobdone:(game)->@action?
     constructor:->
         super
         @holywater=true
@@ -7219,7 +7219,7 @@ class GuokrLesserHunter extends GuokrPlayer
 class GuokrPriest extends GuokrPlayer
     type:"GuokrPriest"
     jobname:"牧师（魅影）"
-    jobdone:->@action?
+    jobdone:(game)->@action?
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
@@ -7410,7 +7410,7 @@ class GuokrPriest extends GuokrPlayer
 class GuokrBake extends GuokrPlayer
     type:"GuokrBake"
     jobname:"妖怪（魅影）"
-    jobdone:->@action?
+    jobdone:(game)->@action? || !game.night
     team:""
     chooseJobDay:(game)->!@iswolf
     isWinner:(game,team)->
@@ -7556,13 +7556,35 @@ class DoctorAssist extends Player
     type:"DoctorAssist"
     jobname:"验尸官的助手"
     sleeping:->true
-    jobdone:(game)->@flag? || game.night
+    jobdone:(game)->(@target? && @flag?) || game.night
     chooseJobDay:(game)->true
+    isJobType:(type)->
+        # 便宜的
+        if type.match /^DoctorAssist(.+)$/
+            return true
+        super
     getextrajobselection:(pls)->
         @deads=pls
         @guned=@deads.filter (x)->x.found=="deathnote"
+    sunrise:(game)->
+        if @deads.length>0
+            @setTarget null
+            @setFlag "Done"
+            if @deads.length==1
+                @setTarget @deads[0].id
+                @docheckdead game
+        else
+            @setTarget ""
+    beforebury:(game,type)->
+        if type=="day"
+            # 昼になったとき
+            if game.players.filter((x)->x.dead && x.found).length==0
+                @setTarget ""
+            else
+                @getextrajobselection game.players.filter((x)->x.dead && x.found)
+
     makeJobSelection:(game)->
-        if !@target?&&!game.night
+        if !@jobdone
             r=super
             for pl in @deads
                 r.push {
@@ -7593,30 +7615,59 @@ class DoctorAssist extends Player
             mode:"system"
             comment:"#{@name} 宣布对 #{pl.name} 进行验尸。"
         splashlog game.id,game,log
-        #if @guned.some((x)->x.id==pl.id)
-        #    log=
-        #        mode:"skill"
-        #        to:@id
-        #        comment:"#{@name} 可以宣布这被枪杀的尸体的身份。"
-        #    splashlog game.id,game,log
-        #    @setFlag null
+        if @guned.some((x)->x.id==pl.id)
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 可以宣布这被枪杀的尸体的身份。"
+            splashlog game.id,game,log
+            @setFlag null
     job:(game,playerid,query)->
-        if @flag?
-            return "已经不能发动能力了"
-        if game.night
-            return "夜晚不能发的能力"
-        pl=game.getPlayer playerid
-        unless pl?
-            return "对象无效"
-        unless @deads.some((x)->x.id==pl.id)
-            return "不能验那个人的尸体"
-        pl.touched game,@id
-        @setTarget playerid    # 处刑する人
-        splashlog game.id,game,log
-        @setFlag true  # 使用済
-        @setTarget playerid
-        @docheckdead game
+        if query.jobtype=="DoctorAssist" 
+            if @flag?
+                return "已经不能发动能力了"
+            if game.night
+                return "夜晚不能发的能力"
+            pl=game.getPlayer playerid
+            unless pl?
+                return "对象无效"
+            unless @deads.some((x)->x.id==pl.id)
+                return "不能验那个人的尸体"
+            pl.touched game,@id
+            @setTarget playerid    # 处刑する人
+            @setFlag true  # 使用済
+            @docheckdead game
+            null
+        if query.jobtype=="DoctorAssist2"
+            log=
+                mode:"system"
+                comment:"#{@name} 宣布，猎人错杀无辜！"
+            splashlog game.id,game,log
+            if game.bullet>0
+                game.bullet--
+            if game.bullet>0
+                game.bullet--
+            @setFlag true
+            null
+        if query.jobtype=="DoctorAssist3"
+            log=
+                mode:"system"
+                comment:"#{@name} 宣布，猎人成功的解决了狼！"
+            splashlog game.id,game,log
+            if game.bullet<10
+                game.bullet++
+            if game.bullet<10
+                game.bullet++
+            @setFlag true
         null
+    makejobinfo:(game,result)->
+        super
+        if !@dead
+            if @target?
+                result.open.push "DoctorAssist1"
+                result.open.push "DoctorAssist2"
+            else
+                result.open.push "DoctorAssist3"
     sunset:(game)->
         super
         @deads=[]
