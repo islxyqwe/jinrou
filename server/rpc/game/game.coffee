@@ -7410,7 +7410,7 @@ class GuokrPriest extends GuokrPlayer
 class GuokrBake extends GuokrPlayer
     type:"GuokrBake"
     jobname:"妖怪（魅影）"
-    jobdone:(game)->@action? || !game.night
+    jobdone:(game)->@action?
     team:""
     chooseJobDay:(game)->!@iswolf
     isWinner:(game,team)->
@@ -7566,15 +7566,15 @@ class DoctorAssist extends Player
     getextrajobselection:(pls)->
         @deads=pls
         @guned=@deads.filter (x)->x.found=="deathnote"
-    sunrise:(game)->
-        if @deads.length>0
-            @setTarget null
-            @setFlag "Done"
-            if @deads.length==1
-                @setTarget @deads[0].id
-                @docheckdead game
-        else
-            @setTarget ""
+    # sunrise:(game)->
+        # if @deads.length>0
+            # @setTarget null
+            # @setFlag true
+            # if @deads.length==1
+                # @setTarget @deads[0].id
+                # @docheckdead game
+        # else
+            # @setTarget ""
     beforebury:(game,type)->
         if type=="day"
             # 昼になったとき
@@ -7584,7 +7584,7 @@ class DoctorAssist extends Player
                 @getextrajobselection game.players.filter((x)->x.dead && x.found)
 
     makeJobSelection:(game)->
-        if !@jobdone
+        unless @target?
             r=super
             for pl in @deads
                 r.push {
@@ -7638,7 +7638,7 @@ class DoctorAssist extends Player
             @setFlag true  # 使用済
             @docheckdead game
             null
-        if query.jobtype=="DoctorAssist2"
+        if query.jobtype=="DoctorAssist1"
             log=
                 mode:"system"
                 comment:"#{@name} 宣布，猎人错杀无辜！"
@@ -7649,7 +7649,7 @@ class DoctorAssist extends Player
                 game.bullet--
             @setFlag true
             null
-        if query.jobtype=="DoctorAssist3"
+        if query.jobtype=="DoctorAssist2"
             log=
                 mode:"system"
                 comment:"#{@name} 宣布，猎人成功的解决了狼！"
@@ -7660,12 +7660,18 @@ class DoctorAssist extends Player
                 game.bullet++
             @setFlag true
         null
+    checkJobValidity:(game,query)->
+        if query.jobtype=="DoctorAssist1"||query.jobtype=="DoctorAssist2"
+            # なしでOK!
+            return true
+        return super
     makejobinfo:(game,result)->
         super
         if !@dead
             if @target?
-                result.open.push "DoctorAssist1"
-                result.open.push "DoctorAssist2"
+                unless @flag?
+                    result.open.push "DoctorAssist1"
+                    result.open.push "DoctorAssist2"
             else
                 result.open.push "DoctorAssist3"
     sunset:(game)->
