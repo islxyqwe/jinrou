@@ -725,7 +725,7 @@ class Game
             if alives.length>0
                 r=Math.floor Math.random()*alives.length
                 pl=alives[r]
-                sub=Player.factory "DoctorAssist"  # 副を作る
+                sub=Player.factory "Dictator"  # 副を作る
                 pl.transProfile sub
                 sub.getextrajobselection deads
                 newpl=Player.factory null,pl,sub,Complex
@@ -6459,8 +6459,9 @@ class GuokrWolf extends GuokrPlayer
             log=
                 mode:"skill"
                 to:@id
-                comment:"#{@name} 不能吞噬# {t.name} 。"
+                comment:"#{@name} 不能吞噬 #{t.name} 。"
             splashlog game.id,game,log
+            return
         else
             log=
                 mode:"skill"
@@ -6497,8 +6498,9 @@ class GuokrWolf extends GuokrPlayer
             log=
                 mode:"skill"
                 to:@id
-                comment:"#{@name} 不能感染# {t.name} 。"
+                comment:"#{@name} 不能感染 #{t.name} 。"
             splashlog game.id,game,log
+            return
         else
             log=
                 mode:"skill"
@@ -6872,8 +6874,9 @@ class GuokrHunter extends GuokrPlayer
             log=
                 mode:"skill"
                 to:@id
-                comment:"#{@name} 不能对# {t.name} 使用银弹。"
+                comment:"#{@name} 不能对 #{t.name} 使用银弹。"
             splashlog game.id,game,log
+            return
         else
             log=
                 mode:"skill"
@@ -7170,8 +7173,9 @@ class GuokrLesserHunter extends GuokrPlayer
             log=
                 mode:"skill"
                 to:@id
-                comment:"#{@name} 不能对# {t.name} 使用银弹。"
+                comment:"#{@name} 不能对 #{t.name} 使用银弹。"
             splashlog game.id,game,log
+            return
         else
             log=
                 mode:"skill"
