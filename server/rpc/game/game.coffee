@@ -7562,11 +7562,37 @@ class DoctorAssist extends Player
                 @setTarget ""
             else
                 @getextrajobselection game.players.filter((x)->x.dead && x.found)
+    sunrise:(game)->
+        if @deads.length>0
+            if @deads.length==1
+                @setTarget deads[0].id
+                docheckdead game
+        else
+            @setTarget ""
     getextrajobselection:(pls)->
         @deads=pls
         @guned=@deads.filter (x)->x.found=="deathnote"
         @setTarget null
         @setFlag "Done"
+    docheckdead:(game)->
+        pl=game.getPlayer @target
+        resultstr=""
+        if pl.isWerewolf()
+            resultstr="狼人"
+        else if pl.isguokrplayer?
+            if pl.becomewolf
+                resultstr="感染者"
+            else
+                resultstr="村人"
+        if resultstr==""
+            resultstr=pl.psychicResult
+        log=
+            mode:"skill"
+            to:@id
+            comment:"#{@name} 的验尸结果，#{pl.name} 是 #{resultstr}。"
+        splashlog game.id,game,log
+        if @guned.some((x)->x.id==pl.id)
+            @setFlag null
     job:(game,playerid,query)->
         if query.jobtype=="DoctorAssist1"
             pl=game.getPlayer playerid
@@ -7575,23 +7601,7 @@ class DoctorAssist extends Player
             unless @deads.some((x)->x.id==pl.id)
                 return "不能验那个人的尸体"
             @setTarget playerid
-            resultstr=""
-            if pl.isWerewolf()
-                resultstr="狼人"
-            else if pl.isguokrplayer?
-                if pl.becomewolf
-                    resultstr="感染者"
-                else
-                    resultstr="村人"
-            if resultstr==""
-                resultstr=pl.psychicResult
-            log=
-                mode:"skill"
-                to:@id
-                comment:"#{@name} 的验尸结果，#{pl.name} 是 #{resultstr}。"
-            splashlog game.id,game,log
-            if @guned.some((x)->x.id==pl.id)
-                @setFlag null
+            docheckdead game
          else if query.jobtype=="DoctorAssist2"
             log=
                 mode:"system"
@@ -7621,9 +7631,12 @@ class DoctorAssist extends Player
                 result.open.push "DoctorAssist2"
                 result.open.push "DoctorAssist3"
     sunset:(game)->
-        @uncomplex game,true    # 自己からは抜ける
+        @deads=[]
+        @guned=[]
         @setTarget null
         @setFlag "Done"
+        @uncomplex game,true    # 自己からは抜ける
+
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
 # @cmplFlag も持っていい
