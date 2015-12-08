@@ -1209,7 +1209,7 @@ class Game
                     comment:x.will
                 splashlog @id,this,log
         unless type=="day"
-            afterbury deads
+            @afterbury deads
         deads
                 
     # 投票終わりチェック
