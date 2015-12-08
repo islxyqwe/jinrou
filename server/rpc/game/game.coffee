@@ -7565,7 +7565,7 @@ class DoctorAssist extends Player
     sunrise:(game)->
         if @deads.length>0
             if @deads.length==1
-                @setTarget deads[0].id
+                @setTarget @deads[0].id
                 docheckdead game
         else
             @setTarget ""
