@@ -7566,7 +7566,7 @@ class DoctorAssist extends Player
         if @deads.length>0
             if @deads.length==1
                 @setTarget @deads[0].id
-                docheckdead game
+                @docheckdead game
         else
             @setTarget ""
     getextrajobselection:(pls)->
@@ -7601,7 +7601,7 @@ class DoctorAssist extends Player
             unless @deads.some((x)->x.id==pl.id)
                 return "不能验那个人的尸体"
             @setTarget playerid
-            docheckdead game
+            @docheckdead game
          else if query.jobtype=="DoctorAssist2"
             log=
                 mode:"system"
