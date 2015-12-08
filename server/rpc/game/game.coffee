@@ -6713,7 +6713,7 @@ class GuokrHunter extends GuokrPlayer
             to:@id
             comment:"罗盘告诉 #{@name} 场上活着 #{alivewolves.length} 个狼。"
         splashlog game.id,game,log
-        pls=game.players.filter (x)->!x.ishunter?
+        pls=game.players.filter (x)->!(x.isJobType "GuokrHunter"||x.isJobType "GuokrLesserHunter")
         r=Math.floor Math.random()*pls.length
         info=pls[r].type
         @resultstr=""
@@ -7009,7 +7009,7 @@ class GuokrLesserHunter extends GuokrPlayer
             to:@id
             comment:"罗盘告诉 #{@name} 场上活着 #{alivewolves.length} 个狼。"
         splashlog game.id,game,log
-        pls=game.players.filter (x)->!x.ishunter?
+        pls=game.players.filter (x)->!(x.isJobType "GuokrHunter"||x.isJobType "GuokrLesserHunter")
         r=Math.floor Math.random()*pls.length
         info=pls[r].type
         @resultstr=""
