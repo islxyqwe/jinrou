@@ -7658,12 +7658,6 @@ class DoctorAssist extends Player
             # なしでOK!
             return true
         return super
-    makeJobInfo:(game,result)->
-        super
-        result.open.push "DoctorAssist1"
-        unless @flag?
-            result.open.push "DoctorAssist2"
-            result.open.push "DoctorAssist3"
     sunset:(game)->
         super
         @deads=[]
