@@ -730,7 +730,7 @@ class Game
                 sub.getextrajobselection deads
                 newpl=Player.factory null,pl,sub,Complex
                 pl.transProfile newpl
-                pl.transform game,newpl,true
+                pl.transform this,newpl,true
                 log=
                     mode:"system"
                     comment:"#{pl.name} 是验尸官的助手。"
