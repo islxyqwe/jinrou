@@ -7572,6 +7572,7 @@ class DoctorAssist extends Player
             @setFlag null
             if @deads.length==1
                 @setTarget @deads[0].id
+                @setFlag true
                 @docheckdead game
         else
             @setTarget ""
