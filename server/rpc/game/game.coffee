@@ -6178,6 +6178,7 @@ class GuokrPlayer extends Player
                                 splashlog game.id,game,log
         if @action=="visit"
             pl=game.getPlayer @target
+            return unless pl?
             pl.visited.forEach (x,i)=>
                 if x.id==@id
                     pl.visited.splice i,1
@@ -6339,6 +6340,7 @@ class GuokrWolf extends GuokrPlayer
         super
         if @action=="eat"
             pl=game.getPlayer @target
+            return unless pl?
             pl.isbitten.forEach (x,i)=>
                 if x.id==@id
                     pl.isbitten.splice i,1
@@ -6395,6 +6397,7 @@ class GuokrWolf extends GuokrPlayer
                 @doeat game
         if @action=="infect"
             pl=game.getPlayer @target
+            return unless pl?
             pl.isbitten.forEach (x,i)=>
                 if x.id==@id
                     pl.isbitten.splice i,1
@@ -6562,6 +6565,7 @@ class GuokrHunter extends GuokrPlayer
         super
         if @action=="bullet"
             pl=game.getPlayer @target
+            return unless pl?
             pl.isshot.forEach (x,i)=>
                 if x.id==@id
                     pl.isshot.splice i,1
@@ -6942,6 +6946,7 @@ class GuokrLesserHunter extends GuokrPlayer
         super
         if @action=="bullet"
             pl=game.getPlayer @target
+            return unless pl?
             pl.isshot.forEach (x,i)=>
                 if x.id==@id
                     pl.isshot.splice i,1
@@ -7303,6 +7308,7 @@ class GuokrPriest extends GuokrPlayer
                 pl.immured=2
     dobless:(game)->
         pl=game.getPlayer @target
+        return unless pl?
         log=
             mode:"skill"
             to:pl.id
@@ -7345,6 +7351,7 @@ class GuokrPriest extends GuokrPlayer
             @dobless game
         if @action=="cure" && @success
             pl=game.getPlayer @target
+            return unless pl?
             pl.cured.forEach (x,i)=>
                 if x.id==@id
                     pl.cured.splice i,1
@@ -7420,6 +7427,7 @@ class GuokrBake extends GuokrPlayer
         super
         if @action=="watch"
             pl=game.getPlayer @target
+            return unless pl?
             pl.watched.forEach (x,i)=>
                 if x.id==@id
                     pl.watched.splice i,1
@@ -7640,11 +7648,14 @@ class DoctorAssist extends Player
                 result.open.push "DoctorAssist2"
                 result.open.push "DoctorAssist3"
     sunset:(game)->
+        super
         @deads=[]
         @guned=[]
         @setTarget null
         @setFlag "Done"
         @uncomplex game,true    # 自己からは抜ける
+        pl=game.getPlayer @id
+        pl.sunset game
 
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
