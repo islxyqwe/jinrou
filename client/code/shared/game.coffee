@@ -861,9 +861,7 @@ exports.jobinfo=
         DoctorAssist:
             name:"验尸官助手"
             color:"#00ff88"
-        advisedead:
-            name:"验枪伤死者的助手"
-            color:"#00ff88"
+            
     Werewolf:
         name:"人狼阵营"
         color:"#DD0000"
