@@ -6340,7 +6340,7 @@ class GuokrWolf extends GuokrPlayer
                     injured=2
                     log=
                         mode:"skill"
-                        to:x.id
+                        to:@id
                         comment:"#{@name}受了伤，第二天不能传染。。。"
                     splashlog game.id,game,log
             if pl.watched.length>0 && @success
@@ -6463,7 +6463,7 @@ class GuokrWolf extends GuokrPlayer
             splashlog game.id,game,log
             log=
                 mode:"skill"
-                to:@id
+                to:t.id
                 comment:"#{t.name}差点被狼人袭击咬死，在逃脱的那一刹那，看到了来袭者是 #{@name} ..."
             splashlog game.id,game,log
     doinfect:(game)->
@@ -6879,7 +6879,7 @@ class GuokrHunter extends GuokrPlayer
             splashlog game.id,game,log
             log=
                 mode:"skill"
-                to:@id
+                to:t.id
                 comment:"#{t.name}侥幸躲过一次枪击，借着枪口的火光看到了来袭者是 #{@name} ..."
             splashlog game.id,game,log
     makejobinfo:(game,result)->
@@ -7252,7 +7252,7 @@ class GuokrPriest extends GuokrPlayer
         null
     docure:(game)->
         pl=game.getPlayer @target
-        if pl.isWerewolf
+        if pl.isWerewolf()
             log=
                 mode:"skill"
                 to:@id
