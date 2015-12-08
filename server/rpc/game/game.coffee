@@ -735,6 +735,7 @@ class Game
                     mode:"system"
                     comment:"#{pl.name} 是验尸官的助手。"
                 splashlog @id,@,log
+        @afterbury deads
         if @rule.jobrule=="特殊规则.量子人狼"
             # 量子人狼
             # 全员の確率を出してあげるよーーーーー
@@ -1121,6 +1122,9 @@ class Game
 
     # 死んだ人を処理する type: タイミング
     # type: "day": 夜が明けたタイミング "night": 处刑後 "other":其他(ターン変わり時の能力で死んだやつなど）
+    afterbury:(deads)->
+        deads.forEach (x)=>
+            x.setDead x.dead,"" #発見されました
     bury:(type)->
 
         @votingbox.candidates = @votingbox.candidates.filter (x)->!x.dead
@@ -1196,7 +1200,6 @@ class Game
                 event:"found"
                 flag:x.found
             }
-            x.setDead x.dead,"" #発見されました
             @ss.publish.user x.realid,"refresh",{id:@id}
             if @rule.will=="die" && x.will
                 # 死んだら遗言発表
@@ -1205,6 +1208,8 @@ class Game
                     name:x.name
                     comment:x.will
                 splashlog @id,this,log
+        unless type=="day"
+            afterbury deads
         deads
                 
     # 投票終わりチェック
@@ -7547,7 +7552,7 @@ class DoctorAssist extends Player
     makeJobSelection:(game)->
         if !@target?&&!game.night
             r=super
-            for pl in deads
+            for pl in @deads
                 r.push {
                     name:pl.name
                     value:pl.id
@@ -7590,6 +7595,10 @@ class DoctorAssist extends Player
             mode:"skill"
             to:@id
             comment:"#{@name} 的验尸结果，#{pl.name} 是 #{resultstr}。"
+        splashlog game.id,game,log
+        log=
+            mode:"system"
+            comment:"#{@name} 宣布对 #{pl.name} 进行验尸。"
         splashlog game.id,game,log
         if @guned.some((x)->x.id==pl.id)
             @setFlag null
