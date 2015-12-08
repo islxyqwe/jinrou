@@ -7593,13 +7593,13 @@ class DoctorAssist extends Player
             mode:"system"
             comment:"#{@name} 宣布对 #{pl.name} 进行验尸。"
         splashlog game.id,game,log
-        if @guned.some((x)->x.id==pl.id)
-            log=
-                mode:"skill"
-                to:@id
-                comment:"#{@name} 可以宣布这被枪杀的尸体的身份。"
-            splashlog game.id,game,log
-            @setFlag null
+        #if @guned.some((x)->x.id==pl.id)
+        #    log=
+        #        mode:"skill"
+        #        to:@id
+        #        comment:"#{@name} 可以宣布这被枪杀的尸体的身份。"
+        #    splashlog game.id,game,log
+        #    @setFlag null
     job:(game,playerid,query)->
         if @flag?
             return "已经不能发动能力了"
@@ -7608,16 +7608,23 @@ class DoctorAssist extends Player
         pl=game.getPlayer playerid
         unless pl?
             return "对象无效"
+        unless @deads.some((x)->x.id==pl.id)
+            return "不能验那个人的尸体"
         pl.touched game,@id
         @setTarget playerid    # 处刑する人
-        log=
-            mode:"system"
-            comment:"独裁者 #{@name} 宣布将要处刑 #{pl.name}。"
         splashlog game.id,game,log
         @setFlag true  # 使用済
         @setTarget playerid
         @docheckdead game
         null
+    sunset:(game)->
+        super
+        @deads=[]
+        @guned=[]
+        @setTarget null
+        @setFlag null
+        @uncomplex game,true    # 自己からは抜ける
+        
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
 # @cmplFlag も持っていい
