@@ -7552,7 +7552,7 @@ class DoctorAssist extends Player
     type:"DoctorAssist"
     jobname:"验尸官的助手"
     sleeping:->true
-    jobdone:(game)->game.night || !@target? || !@flag?
+    jobdone:(game)->game.night || (@target? && @flag?)
     chooseJobDay:(game)->true
     constructor:->
         @deads=[]
