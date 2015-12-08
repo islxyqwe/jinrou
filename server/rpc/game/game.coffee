@@ -727,7 +727,7 @@ class Game
                 pl=alives[r]
                 sub=Player.factory "DoctorAssist"  # 副を作る
                 pl.transProfile sub
-                sub.setinfo deads
+                sub.getextrajobselection deads
                 newpl=Player.factory null,pl,sub,Complex
                 pl.transProfile newpl
                 pl.transform game,newpl,true
@@ -2181,6 +2181,7 @@ class Player
     # ちょっかいを出されたとき(jobのとき)
     touched:(game,from)->
     # 选择肢を返す
+    getextrajobselection:(pls)->
     makeJobSelection:(game)->
         if game.night
             # 夜の能力
@@ -7560,10 +7561,10 @@ class DoctorAssist extends Player
             if game.players.filter((x)->x.dead && x.found).length==0
                 @setTarget ""
             else
-                @setinfo game.players.filter((x)->x.dead && x.found)
-    setinfo:(deads)->
-        @deads=deads
-        @guned=deads.filter (x)->x.found=="deathnote"
+                @getextrajobselection game.players.filter((x)->x.dead && x.found)
+    getextrajobselection:(pls)->
+        @deads=pls
+        @guned=@deads.filter (x)->x.found=="deathnote"
         @setTarget null
         @setFlag "Done"
     job:(game,playerid,query)->
@@ -7623,7 +7624,6 @@ class DoctorAssist extends Player
         @uncomplex game,true    # 自己からは抜ける
         @setTarget null
         @setFlag "Done"
-
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
 # @cmplFlag も持っていい
