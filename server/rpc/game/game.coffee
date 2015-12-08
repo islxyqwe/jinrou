@@ -725,7 +725,7 @@ class Game
             if alives.length>0
                 r=Math.floor Math.random()*alives.length
                 pl=alives[r]
-                sub=Player.factory "Dictator"  # 副を作る
+                sub=Player.factory "DoctorAssist"  # 副を作る
                 pl.transProfile sub
                 sub.getextrajobselection deads
                 newpl=Player.factory null,pl,sub,Complex
@@ -7556,7 +7556,7 @@ class DoctorAssist extends Player
     type:"DoctorAssist"
     jobname:"验尸官的助手"
     sleeping:->true
-    jobdone:(game)->game.night || (@target? && @flag?)
+    jobdone:(game)->@flag? || game.night
     chooseJobDay:(game)->true
     isJobType:(type)->
         # 便宜的
@@ -7660,9 +7660,8 @@ class DoctorAssist extends Player
         return super
     makeJobInfo:(game,result)->
         super
-        unless game.night
-                result.open.push "DoctorAssist1"
-            if !@flag?
+            result.open.push "DoctorAssist1"
+            unless @flag?
                 result.open.push "DoctorAssist2"
                 result.open.push "DoctorAssist3"
     sunset:(game)->
