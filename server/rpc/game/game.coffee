@@ -6467,7 +6467,8 @@ class GuokrWolf extends GuokrPlayer
             if t.undefeated!=0
                 number=0
         if Math.random()<number
-            t.success=false
+            if t.isguokrplayer?
+                t.success=false
             t.die game,"werewolf"
         else
             log=
@@ -6870,7 +6871,8 @@ class GuokrHunter extends GuokrPlayer
                 comment:"#{@name} 对 #{t.name} 使用了银弹。"
             splashlog game.id,game,log
         if Math.random()*10<game.bullet
-            t.success=false
+            if t.isguokrplayer?
+                t.success=false
             t.die game,"deathnote"
             if t.isWerewolf()
                 if game.bullet<10
@@ -7166,7 +7168,8 @@ class GuokrLesserHunter extends GuokrPlayer
                 comment:"#{@name} 对 #{t.name} 使用了银弹。"
             splashlog game.id,game,log
         if Math.random()*10<game.bullet
-            t.success=false
+            if t.isguokrplayer?
+                t.success=false
             t.die game,"deathnote"
             if t.isWerewolf()
                 if game.bullet<10
