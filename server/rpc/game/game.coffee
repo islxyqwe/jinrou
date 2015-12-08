@@ -7566,15 +7566,15 @@ class DoctorAssist extends Player
     getextrajobselection:(pls)->
         @deads=pls
         @guned=@deads.filter (x)->x.found=="deathnote"
-    # sunrise:(game)->
-        # if @deads.length>0
-            # @setTarget null
-            # @setFlag true
-            # if @deads.length==1
-                # @setTarget @deads[0].id
-                # @docheckdead game
-        # else
-            # @setTarget ""
+    sunrise:(game)->
+        if @deads.length>0
+            @setTarget null
+            @setFlag true
+            if @deads.length==1
+                @setTarget @deads[0].id
+                @docheckdead game
+        else
+            @setTarget ""
     beforebury:(game,type)->
         if type=="day"
             # 昼になったとき
