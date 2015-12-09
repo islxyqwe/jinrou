@@ -6682,6 +6682,7 @@ class GuokrHunter extends GuokrPlayer
                 comment:"#{@name} 把装备留给了 #{pl.name} 。"        
             splashlog game.id,game,log
             @equipgiven=true
+            return if Math.random()<0.1 #失败率
             if pl.isguokrplayer?
                 if pl.isJobType "GuokrHuman" 
                     if !pl.becomewolf
@@ -7190,12 +7191,21 @@ class GuokrLesserHunter extends GuokrPlayer
                 if game.bullet<10
                     game.bullet++
             else if t.isguokrplayer?
-                if t.becomewolf
-                    if game.bullet<10
-                        game.bullet++
+                if t.isJobType "GuokrBake"
+                    if t.becomewolf
+                        if game.bullet<10
+                            game.bullet++
+                    else
+                        if game.bullet>0
+                            game.bullet--
                 else
-                    if game.bullet>0
-                        game.bullet--
+                    unless t.iswolf
+                        if t.becomewolf
+                            if game.bullet<10
+                                game.bullet++
+                        else
+                            if game.bullet>0
+                                game.bullet--
             else
                 if game.bullet>0
                     game.bullet--
@@ -7231,6 +7241,7 @@ class GuokrPriest extends GuokrPlayer
                 to:@id
                 comment:"#{@name} 在家里祷告。"
             splashlog game.id,game,log
+            return if Math.random()<0.1 #失败率
             @undefeated=1
             null
         if query.jobtype=="GuokrPriest2"
@@ -7259,19 +7270,25 @@ class GuokrPriest extends GuokrPlayer
                 return "不能对自己使用"          
             @setTarget playerid
             pl.touched game,@id
+            log=
+                mode:"skill"
+                to:@id
+                comment:"#{@name} 在家里祝福了 #{pl.name} 。"
+            splashlog game.id,game,log
+            @action=""
+            if pl.isWerewolf()
+                return
             @action="bless"
             if pl.isguokrplayer?
+                if pl.becomewolf
+                    @action=""
+                    return
                 pl.blessed=2
             else
                 newpl=Player.factory null,pl,null,HolyProtected # 守られた人
                 pl.transProfile newpl
                 newpl.cmplFlag=@id  # 护卫元
                 pl.transform game,newpl,true
-            log=
-                mode:"skill"
-                to:@id
-                comment:"#{@name} 在家里祝福了 #{pl.name} 。"
-            splashlog game.id,game,log
             null
         if query.jobtype=="GuokrPriest4"
             @action="dedicate"
