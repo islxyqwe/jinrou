@@ -7699,8 +7699,9 @@ class DoctorAssist extends Player
         @setTarget null
         @setFlag null
         @uncomplex game,true    # 自己からは抜ける
-        pl=game.getPlayer @id
-        pl.sunset game
+        unless pl.isJobType "DoctorAssist"
+            pl=game.getPlayer @id
+            pl.sunset game
         
 # 複合职业 Player.factoryで適切に生成されることを期待
 # superはメイン职业 @mainにメイン @subにサブ
