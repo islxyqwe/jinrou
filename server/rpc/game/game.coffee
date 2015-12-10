@@ -7351,7 +7351,7 @@ class GuokrPriest extends GuokrPlayer
                 log=
                     mode:"skill"
                     to:hunters[r].id
-                    comment:"#{hunters[r].name} 接到了圣光的指引，狼人是#{wolves[s].name}。"
+                    comment:"#{hunters[r].name} 从圣光中收到了 狼人是 #{wolves[s].name} 的指引。"
                 splashlog game.id,game,log
         @die game,"dedicate"
     checkJobValidity:(game,query)->
@@ -7422,8 +7422,8 @@ class GuokrPriest extends GuokrPlayer
             result.open.push "GuokrPriest1" #祈祷
             result.open.push "GuokrPriest2" #净化
             result.open.push "GuokrPriest3" #神佑
-            if game.players.length>=13
-                result.open.push "GuokrPriest4" #奉献
+            #if game.players.length>=13
+            result.open.push "GuokrPriest4" #奉献
 class GuokrBake extends GuokrPlayer
     type:"GuokrBake"
     jobname:"妖怪（魅影）"
