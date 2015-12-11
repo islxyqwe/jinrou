@@ -7343,7 +7343,7 @@ class GuokrPriest extends GuokrPlayer
             @docure game
         if !@becomewolf
             hunters=game.players.filter (pl)->!pl.dead && pl.isJobType "GuokrHunter"
-            hunters=hunters.concat @players.filter (pl)->!pl.dead && pl.isJobType "GuokrLesserHunter"
+            hunters=hunters.concat game.players.filter (pl)->!pl.dead && pl.isJobType "GuokrLesserHunter"
             wolves=game.players.filter (pl)->!pl.dead && pl.isWerewolf()
             if hunters.length>0
                 r=Math.floor Math.random()*hunters.length
