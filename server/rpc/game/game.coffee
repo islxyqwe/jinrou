@@ -7291,6 +7291,8 @@ class GuokrPriest extends GuokrPlayer
                 pl.transform game,newpl,true
             null
         if query.jobtype=="GuokrPriest4"
+            if game.day==1
+                return "第一天不能使用" 
             @action="dedicate"
             @undefeated=1
             log=
@@ -7422,8 +7424,8 @@ class GuokrPriest extends GuokrPlayer
             result.open.push "GuokrPriest1" #祈祷
             result.open.push "GuokrPriest2" #净化
             result.open.push "GuokrPriest3" #神佑
-            #if game.players.length>=13
-            result.open.push "GuokrPriest4" #奉献
+            if game.players.length>=13
+                result.open.push "GuokrPriest4" #奉献
 class GuokrBake extends GuokrPlayer
     type:"GuokrBake"
     jobname:"妖怪（魅影）"
