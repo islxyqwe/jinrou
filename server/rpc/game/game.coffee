@@ -7471,6 +7471,12 @@ class GuokrBake extends GuokrPlayer
                     x.action="eat"
                     x.doeat game
                     x.action=""
+                else
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}差点被#{x.name}一枪崩死！"
+                    splashlog game.id,game,log
             if pl.isshot.length>0 && @success
                 if Math.random()<0.5
                     @success=false
@@ -7480,6 +7486,12 @@ class GuokrBake extends GuokrPlayer
                     x.action="bullet"
                     x.dobullet game
                     x.action=""
+                else
+                    log=
+                        mode:"skill"
+                        to:@id
+                        comment:"#{@name}差点被#{x.name}咬死！"
+                    splashlog game.id,game,log
             if pl.cured.length>0 && @success
                 x=pl.cured[0]
                 log=
