@@ -6131,7 +6131,6 @@ class GuokrPlayer extends Player
             comment:"#{@name} 准备去拜访 #{pl.name} 的家。"
         splashlog game.id,game,log
     midnight:(game)->
-        super
         if @goneout
             if Math.random()<0.25
                 pls=[]
@@ -6179,9 +6178,7 @@ class GuokrPlayer extends Player
         if @action=="visit"
             pl=game.getPlayer @target
             return unless pl?
-            pl.visited.forEach (x,i)=>
-                if x.id==@id
-                    pl.visited.splice i,1
+            pl.visited=pl.visited.filter (x)=>x.id!=@id
             if pl.isprotected.length>0 && @success
                 if Math.random()<0.5
                     @success=false
@@ -6215,6 +6212,8 @@ class GuokrPlayer extends Player
                 splashlog game.id,game,log
             if @success
                 @dovisit game
+        @action=null
+        super
     dovisit:(game)->
         pl=game.getPlayer @target
         if pl?
@@ -6337,13 +6336,10 @@ class GuokrWolf extends GuokrPlayer
             splashlog game.id,game,log
         null
     midnight:(game)->
-        super
         if @action=="eat"
             pl=game.getPlayer @target
             return unless pl?
-            pl.isbitten.forEach (x,i)=>
-                if x.id==@id
-                    pl.isbitten.splice i,1
+            pl.isbitten=pl.isbitten.filter (x)=>x.id!=@id
             if pl.isprotected.length>0 && @success
                 if Math.random()<0.1
                     @success=false
@@ -6398,9 +6394,7 @@ class GuokrWolf extends GuokrPlayer
         if @action=="infect"
             pl=game.getPlayer @target
             return unless pl?
-            pl.isbitten.forEach (x,i)=>
-                if x.id==@id
-                    pl.isbitten.splice i,1
+            pl.isbitten=pl.isbitten.filter (x)=>x.id!=@id
             if pl.isprotected.length>0 && @success
                 if Math.random()<0.1
                     @success=false
@@ -6452,6 +6446,7 @@ class GuokrWolf extends GuokrPlayer
                 @action=""
             if @success
                 @doinfect game
+        super
     doeat:(game)->
         t=game.getPlayer @target
         return unless t?
@@ -6564,13 +6559,16 @@ class GuokrHunter extends GuokrPlayer
             splashlog game.id,game,log
             @equipgiven=true
     midnight:(game)->
-        super
+        while @isbitten.length>0
+            temp=@isbitten[0]
+            temp.midnight game
+            if @isbitten.length>0
+                if temp.id==@isbitten[0].id
+                    @isbitten=@isbitten.filter (x)->x.id!=temp.id
         if @action=="bullet"
             pl=game.getPlayer @target
             return unless pl?
-            pl.isshot.forEach (x,i)=>
-                if x.id==@id
-                    pl.isshot.splice i,1
+            pl.isshot=pl.isshot.filter (x)=>x.id!=@id
             if pl.watched.length>0 && @success
                 x=pl.watched.pop()
                 if Math.random()<0.5
@@ -6603,6 +6601,7 @@ class GuokrHunter extends GuokrPlayer
                 @dobullet game
         if @action=="divine" && @success
             @dodivine game
+        super
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
@@ -6947,13 +6946,16 @@ class GuokrLesserHunter extends GuokrPlayer
         super
         @holywater=true
     midnight:(game)->
-        super
+        while @isbitten.length>0
+            temp=@isbitten[0]
+            temp.midnight game
+            if @isbitten.length>0
+                if temp.id==@isbitten[0].id
+                    @isbitten=@isbitten.filter (x)->x.id!=temp.id
         if @action=="bullet"
             pl=game.getPlayer @target
             return unless pl?
-            pl.isshot.forEach (x,i)=>
-                if x.id==@id
-                    pl.isshot.splice i,1
+            pl.isshot=pl.isshot.filter (x)=>x.id!=@id
             if pl.watched.length>0 && @success
                 x=pl.watched.pop()
                 if Math.random()<0.5
@@ -6984,6 +6986,7 @@ class GuokrLesserHunter extends GuokrPlayer
                 @action=""
             if @success
                 @dobullet game
+        super
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
@@ -7367,7 +7370,12 @@ class GuokrPriest extends GuokrPlayer
             return true
         super
     midnight:(game)->
-        super
+        while @isbitten.length>0
+            temp=@isbitten[0]
+            temp.midnight game
+            if @isbitten.length>0
+                if temp.id==@isbitten[0].id
+                    @isbitten=@isbitten.filter (x)->x.id!=temp.id
         if @action=="dedicate" && @success
             @dodedicate game
         if @action=="bless" && @success
@@ -7375,9 +7383,7 @@ class GuokrPriest extends GuokrPlayer
         if @action=="cure" && @success
             pl=game.getPlayer @target
             return unless pl?
-            pl.cured.forEach (x,i)=>
-                if x.id==@id
-                    pl.cured.splice i,1
+            pl.cured=pl.cured.filter (x)=>x.id!=@id
             if pl.isprotected.length>0 && @success
                 if Math.random()<0.5
                     @success=false
@@ -7418,6 +7424,7 @@ class GuokrPriest extends GuokrPlayer
                     splashlog game.id,game,log
             if @success
                 @docure game
+        super
     makejobinfo:(game,result)->
         super
         if game.night&&!@dead
@@ -7447,13 +7454,10 @@ class GuokrBake extends GuokrPlayer
             return true
         super
     midnight:(game)->
-        super
         if @action=="watch"
             pl=game.getPlayer @target
             return unless pl?
-            pl.watched.forEach (x,i)=>
-                if x.id==@id
-                    pl.watched.splice i,1
+            pl.watched=pl.watched.filter (x)=>x.id!=@id
             if pl.isprotected.length>0 && @success
                 if Math.random()<0.5
                     @success=false
@@ -7501,7 +7505,7 @@ class GuokrBake extends GuokrPlayer
                 splashlog game.id,game,log
             if @success
                 @dowatch game
-        @action=null
+        super
     job:(game,playerid,query)->
         if query.jobtype=="GuokrPlayer"
             # 拜访啦
