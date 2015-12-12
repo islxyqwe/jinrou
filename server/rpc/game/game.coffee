@@ -7620,6 +7620,7 @@ class DoctorAssist extends Player
                 @getextrajobselection game.players.filter((x)->x.dead && x.found)
 
     makeJobSelection:(game)->
+        return super unless @deads?
         unless @target?
             r=super
             for pl in @deads
